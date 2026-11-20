@@ -10,10 +10,19 @@
   <header class="app-header">
     <div>
       <h1>Talani Accounts</h1>
-      <div class="sub-line" id="header-sync-status">Local Master • v0.3</div>
+      <div class="sub-line" id="header-sync-status">Local Master • v0.4</div>
     </div>
     <div class="header-right">
       <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
+      <button id="sync-now-btn" class="btn-mini">☁ Sync</button>
+    </div>
+        <div>
+      <h1>Talani Accounts</h1>
+      <div class="sub-line" id="header-sync-status">Local Master • v0.4</div>
+    </div>
+    <div class="header-right">
+      <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
+      <button id="open-reports-btn" class="btn-mini">📊 Reports</button>
       <button id="sync-now-btn" class="btn-mini">☁ Sync</button>
     </div>
   </header>
@@ -63,9 +72,24 @@
           <select id="mpesa-entity-select"></select>
           <select id="mpesa-pool-select"></select>
         </div>
-        <button id="parse-mpesa-btn" class="btn primary">✨ Parse & Draft Entry</button>
+        <div class="btn-row">
+          <button id="parse-mpesa-btn" class="btn primary">✨ Parse SMS</button>
+          <label class="btn secondary" style="display:block; margin:0;">
+            📸 Scan Receipt
+            <input type="file" id="receipt-photo-input" accept="image/*" capture="environment" class="hidden" />
+          </label>
+        </div>
         <div id="parse-status" class="muted small"></div>
       </div>
+
+        <div class="btn-row">
+          <button id="parse-mpesa-btn" class="btn primary">✨ Parse SMS</button>
+          <label class="btn secondary" style="display:block; margin:0;">
+            📸 Scan Receipt
+            <input type="file" id="receipt-photo-input" accept="image/*" capture="environment" class="hidden" />
+          </label>
+        </div>
+
 
       <div id="draft-card" class="card hidden">
         <div class="card-top">
@@ -367,6 +391,86 @@
       <div id="ledger-list"></div>
     </section>
 
+        <!-- 4B. REPORTS, CPA EXPORT & AI CFO (v0.4) -->
+    <section id="view-reports" class="view">
+      <div class="sub-tabs" id="rep-subtabs">
+        <button class="pill active" data-rep="rep-fin">P&L / BS / CF</button>
+        <button class="pill" data-rep="rep-var">Variance & Aging</button>
+        <button class="pill" data-rep="rep-cpa">CPA Export</button>
+        <button class="pill" data-rep="rep-cfo">🤖 AI CFO</button>
+      </div>
+
+      <!-- P&L, BALANCE SHEET & CASH FLOW -->
+      <div id="rep-fin" class="ops-panel active">
+        <div class="card">
+          <h3>Financial Statements Filter</h3>
+          <div class="form-row">
+            <select id="rep-entity"></select>
+            <select id="rep-pool"></select>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Income Statement (P&L)</h3>
+          <div id="rep-pnl-box"></div>
+        </div>
+        <div class="card">
+          <h3>Balance Sheet</h3>
+          <div id="rep-bs-box"></div>
+        </div>
+        <div class="card">
+          <h3>Cash Flow Statement</h3>
+          <div id="rep-cf-box"></div>
+        </div>
+      </div>
+
+      <!-- BUDGET VS ACTUAL & AGING -->
+      <div id="rep-var" class="ops-panel">
+        <div class="card">
+          <h3>Trip Budget vs. Actual Variance</h3>
+          <select id="var-pool-select"></select>
+          <div class="form-row">
+            <input type="number" id="var-bud-fixed" placeholder="Planned Fixed COGS (KSh)" />
+            <input type="number" id="var-bud-var" placeholder="Planned Variable COGS (KSh)" />
+          </div>
+          <button id="save-budget-btn" class="btn primary">Save Trip Budget</button>
+          <div id="var-report-box" style="margin-top:10px;"></div>
+        </div>
+        <div class="card">
+          <h3>A/R & A/P Aging Schedules</h3>
+          <div id="aging-box"></div>
+        </div>
+      </div>
+
+      <!-- CPA CSV EXPORTS -->
+      <div id="rep-cpa" class="ops-panel">
+        <div class="card">
+          <h3>Human CPA Audit Exports (CSV / Excel)</h3>
+          <p class="muted" style="margin-bottom:10px;">Export clean, double-entry schedules ready for your external accountant or iTax/eTIMS review.</p>
+          <div class="btn-row">
+            <button id="exp-tb-btn" class="btn primary">⬇ Trial Balance (.csv)</button>
+            <button id="exp-gl-btn" class="btn success">⬇ General Ledger (.csv)</button>
+          </div>
+          <div id="cpa-exp-status" class="muted small"></div>
+        </div>
+      </div>
+
+      <!-- CONVERSATIONAL AI CFO -->
+      <div id="rep-cfo" class="ops-panel">
+        <div class="card">
+          <h3>🤖 AI CFO Copilot</h3>
+          <p class="muted" style="margin-bottom:8px;">Ask anything about your live cash, trip margins, unpaid balances, or KRA eTIMS exposure.</p>
+          <div id="cfo-chat-box" class="journal-preview" style="max-height:240px; overflow-y:auto;">
+            <div class="muted">Try: "What is our free cash excluding deposits?" or "Which trip pool has the highest costs?"</div>
+          </div>
+          <div class="add-row">
+            <input type="text" id="cfo-input" placeholder="Ask your AI CFO..." />
+            <button id="cfo-send-btn" class="btn-mini ok">Ask</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
     <!-- 5. SETUP, ENTITIES, POOLS & SYNC -->
     <section id="view-setup" class="view">
       <div class="card">
@@ -434,8 +538,8 @@
 
   <script src="app.js"></script>
   <script src="v3.js"></script>
+  <script src="v4.js"></script>
 </body>
-
   <script src="app.js"></script>
 </body>
 </html>
