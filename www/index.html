@@ -10,7 +10,7 @@
   <header class="app-header">
     <div>
       <h1>Talani Accounts</h1>
-      <div class="sub-line" id="header-sync-status">Local Master • v0.2</div>
+      <div class="sub-line" id="header-sync-status">Local Master • v0.3</div>
     </div>
     <div class="header-right">
       <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
@@ -240,6 +240,116 @@
         </div>
       </div>
     </section>
+
+        <!-- 3E. BALANCE SHEET, FX & KRA PREP (v0.3) -->
+    <section id="view-books" class="view">
+      <div class="sub-tabs" id="books-subtabs">
+        <button class="pill active" data-bk="bk-assets">Assets & Merch</button>
+        <button class="pill" data-bk="bk-cap">Loans & Equity</button>
+        <button class="pill" data-bk="bk-fx">Multi-FX</button>
+        <button class="pill" data-bk="bk-kra">KRA & Payroll</button>
+      </div>
+
+      <!-- ASSETS & INVENTORY -->
+      <div id="bk-assets" class="ops-panel active">
+        <div class="card">
+          <h3>+ Buy Fixed Asset (CapEx → 1500)</h3>
+          <input type="text" id="fa-name" placeholder="Equipment (e.g., Walkie-Talkies, Tent)" />
+          <div class="form-row">
+            <input type="number" id="fa-cost" placeholder="Cost (KSh)" />
+            <input type="number" id="fa-months" placeholder="Life (Months)" value="36" />
+          </div>
+          <button id="add-fa-btn" class="btn primary">Record CapEx Asset</button>
+        </div>
+        <div id="fa-list"></div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>+ Restock Merch Inventory (→ 1200)</h3>
+          <input type="text" id="inv-name" placeholder="Item (e.g., Branded Leather Tote)" />
+          <div class="form-row">
+            <input type="number" id="inv-qty" placeholder="Qty" />
+            <input type="number" id="inv-cost" placeholder="Total Cost (KSh)" />
+          </div>
+          <button id="add-inv-btn" class="btn primary">Add Stock to Inventory</button>
+        </div>
+        <div id="inv-list"></div>
+      </div>
+
+      <!-- LOANS & PARTNER CAPITAL -->
+      <div id="bk-cap" class="ops-panel">
+        <div class="card">
+          <h3>+ Log Business Loan (→ 2100)</h3>
+          <input type="text" id="ln-lender" placeholder="Lender Name" />
+          <div class="form-row">
+            <input type="number" id="ln-amt" placeholder="Principal (KSh)" />
+            <input type="number" id="ln-rate" placeholder="Annual Rate %" value="14" />
+          </div>
+          <button id="add-loan-btn" class="btn primary">Record Loan Received</button>
+        </div>
+        <div id="loan-list"></div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Partner Capital & Draws (3010 / 3030)</h3>
+          <input type="text" id="pt-name" placeholder="Partner Name" />
+          <div class="form-row">
+            <select id="pt-type">
+              <option value="INJECT">Capital Injection (CR 3010)</option>
+              <option value="DRAW">Owner Draw / Dividend (DR 3030)</option>
+            </select>
+            <input type="number" id="pt-amt" placeholder="Amount (KSh)" />
+          </div>
+          <button id="add-pt-btn" class="btn primary">Post Equity Entry</button>
+        </div>
+        <div id="partner-summary"></div>
+      </div>
+
+      <!-- MULTI-CURRENCY FX -->
+      <div id="bk-fx" class="ops-panel">
+        <div class="card">
+          <h3>Multi-Currency Invoice (USD / TZS → KES)</h3>
+          <input type="text" id="fx-desc" placeholder="Description (e.g., Zanzibar Hotel Deposit)" />
+          <div class="form-row">
+            <select id="fx-curr"><option value="USD">USD</option><option value="TZS">TZS</option></select>
+            <input type="number" id="fx-foreign" placeholder="Foreign Amount" step="0.01" />
+          </div>
+          <div class="form-row">
+            <input type="number" id="fx-book-rate" placeholder="Booking Rate (KES)" step="0.0001" />
+            <input type="number" id="fx-paid-rate" placeholder="Actual Bank Rate (KES)" step="0.0001" />
+          </div>
+          <button id="post-fx-btn" class="btn primary">Post FX Payment & Gain/Loss</button>
+        </div>
+        <div id="fx-list"></div>
+      </div>
+
+      <!-- KRA & 2026 PAYROLL -->
+      <div id="bk-kra" class="ops-panel">
+        <div class="card">
+          <h3>KRA VAT & eTIMS Compliance</h3>
+          <div id="kra-summary"></div>
+        </div>
+
+        <div class="card">
+          <h3>Withholding Tax (WHT) Contractor Payment</h3>
+          <input type="text" id="wht-vendor" placeholder="Contractor (e.g., Photographer / Guide)" />
+          <div class="form-row">
+            <input type="number" id="wht-gross" placeholder="Gross Fee (KSh)" />
+            <input type="number" id="wht-rate" placeholder="WHT %" value="5" />
+          </div>
+          <button id="post-wht-btn" class="btn primary">Pay Net & Accrue WHT (2040)</button>
+        </div>
+
+        <div class="card">
+          <h3>2026 Kenya Payroll Run (PAYE, NSSF, SHIF, AHL)</h3>
+          <div class="form-row">
+            <input type="text" id="pay-emp" placeholder="Employee Name" />
+            <input type="number" id="pay-gross" placeholder="Gross Monthly (KSh)" />
+          </div>
+          <div id="pay-preview" class="journal-preview">Enter gross salary to preview 2026 statutory deductions.</div>
+          <button id="post-pay-btn" class="btn success">Post Monthly Payroll JE</button>
+        </div>
+      </div>
+    </section>
+
 
     <!-- 4. IMMUTABLE GENERAL LEDGER -->
     <section id="view-ledger" class="view">
