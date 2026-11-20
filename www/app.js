@@ -779,29 +779,35 @@ document.getElementById("save-cfg-btn").addEventListener("click", () => {
   document.getElementById("cfg-status").textContent = "✓ Keys & Team PIN saved locally.";
 });
 
-document.getElementById("export-vault-btn").addEventListener("click", () => {
-  const blob = new Blob([JSON.stringify(ledger, null, 2)], { type: "application/json" });
+document.getElementById("export-vault-btn").addEventListener("click", async () => {
+  const json = JSON.stringify(ledger, null, 2);
+  const filename = `talani-accounts-vault-${todayStr()}.json`;
+  const status = document.getElementById("vault-status");
+
+  // 1. Copy to clipboard as an instant fallback
+  try { await navigator.clipboard.writeText(json); } catch {}
+
+  // 2. Open Android's native Share sheet (works inside Capacitor APK)
+  try {
+    const file = new File([json], filename, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ title: "Talani Accounts Vault", files: [file] });
+      status.textContent = "✓ Vault shared & copied to clipboard.";
+      return;
+    }
+  } catch {}
+
+  // 3. Desktop browser download fallback
+  const blob = new Blob([json], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `talani-accounts-vault-${todayStr()}.json`;
+  a.download = filename;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
+  status.textContent = "✓ Vault copied to clipboard (paste into any .json file to save).";
 });
-document.getElementById("import-vault-input").addEventListener("change", (e) => {
-  const f = e.target.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = (ev) => {
-    try {
-      const imp = JSON.parse(ev.target.result);
-      if (!Array.isArray(imp.entries)) throw new Error();
-      ledger = { ...JSON.parse(JSON.stringify(DEFAULT_LEDGER)), ...imp };
-      saveLedger(false);
-      renderAll();
-      document.getElementById("vault-status").textContent = "✓ Vault imported.";
-    } catch { document.getElementById("vault-status").textContent = "Invalid JSON vault."; }
-  };
-  r.readAsText(f);
-});
+
 
 // ================= RENDERERS =================
 function populateDropdowns() {
