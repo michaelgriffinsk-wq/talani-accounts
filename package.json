@@ -1,0 +1,11 @@
+{
+  "name": "talani-accounts",
+  "version": "0.1.0",
+  "description": "Talani Adventures Accounts - Double-Entry AI Accounting",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}
