@@ -13,6 +13,9 @@
     .hero { border-color:rgba(16,185,129,0.45); background:linear-gradient(145deg,#131c31,#0f2420); }
     .amt { font-size:1.8rem; font-weight:800; color:var(--accent); margin:4px 0 10px; }
     .muted { color:var(--muted); font-size:0.82rem; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; font-size:0.78rem; }
+    .box strong { display:block; font-size:0.96rem; margin-top:3px; }
     .row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:0.84rem; }
     .row:last-child { border-bottom:none; }
     input { width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin:10px 0; font-size:0.9rem; }
@@ -50,6 +53,13 @@
       </div>
     </div>
 
+    <div class="grid">
+      <div class="box"><span class="muted">Open Client A/R</span><strong id="obs-ar">KSh 0</strong></div>
+      <div class="box"><span class="muted">Unpaid Supplier A/P</span><strong style="color:var(--gold)" id="obs-ap">KSh 0</strong></div>
+      <div class="box"><span class="muted">Active Trail Floats</span><strong id="obs-float">KSh 0</strong></div>
+      <div class="box"><span class="muted">Partner Reimb. Owed</span><strong id="obs-reimb">KSh 0</strong></div>
+    </div>
+
     <div class="card">
       <h3 style="font-size:0.92rem; margin-bottom:6px;">Subsidiaries</h3>
       <div id="obs-entities"></div>
@@ -68,8 +78,8 @@
 
   <script>
     const CASH = ["1010","1020","1030"];
-    const RESTRICTED = ["2010","2020","2030","2040"];
-    const CR_NORMAL = ["2010","2020","2030","2040","2100","3010","3020","4010","4020","4030","4040"];
+    const RESTRICTED = ["2010","2020","2030","2040","2050"];
+    const CR_NORMAL = ["2010","2020","2030","2040","2050","2100","3010","3020","3025","4010","4020","4030","4040"];
     const fmt = (n) => "KSh " + Number(n||0).toLocaleString("en-KE",{maximumFractionDigits:2});
     const esc = (s) => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     const b64ToBuf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
@@ -103,7 +113,7 @@
       errEl.textContent = "Fetching encrypted snapshot...";
       try {
         const res = await fetch("./ledger.enc.json?t=" + Date.now());
-        if (!res.ok) throw new Error("No synced ledger found yet. Ask the accountant to tap Sync.");
+        if (!res.ok) throw new Error("No synced ledger found yet.");
         const pkg = await res.json();
         const data = await decrypt(pkg, pin);
 
@@ -115,17 +125,27 @@
         document.getElementById("obs-restricted").textContent = fmt(restricted);
         document.getElementById("obs-free").textContent = fmt(totalCash - restricted);
 
+        const openAR = (data.bookings||[]).filter(b=>b.status==="ACTIVE").reduce((s,b)=>s+Math.max(0,b.ticketPrice-b.discount-b.paid),0);
+        const openAP = (data.payables||[]).filter(p=>p.status==="OPEN").reduce((s,p)=>s+Math.max(0,p.totalAmount-p.paidAmount),0);
+        const openFl = (data.floats||[]).filter(f=>f.status==="OPEN").reduce((s,f)=>s+Math.max(0,f.issued-f.spent-f.returned),0);
+        const openRe = (data.reimbursements||[]).filter(r=>r.status==="OPEN").reduce((s,r)=>s+Number(r.amount||0),0);
+
+        document.getElementById("obs-ar").textContent = fmt(openAR);
+        document.getElementById("obs-ap").textContent = fmt(openAP);
+        document.getElementById("obs-float").textContent = fmt(openFl);
+        document.getElementById("obs-reimb").textContent = fmt(openRe);
+
         document.getElementById("obs-entities").innerHTML = data.entities.map(e => {
           const b = calc(data.entries.filter(x => x.entityId === e.id));
           const c = CASH.reduce((s,k)=>s+(b[k]||0), 0);
-          return `<div class="row"><strong>${esc(e.name)}</strong><span>Cash: ${fmt(c)} • Deposits: ${fmt(b["2010"]||0)}</span></div>`;
+          return `<div class="row"><strong>${esc(e.name)}</strong><span>Cash: ${fmt(c)} • Dep: ${fmt(b["2010"]||0)}</span></div>`;
         }).join("");
 
         document.getElementById("obs-pools").innerHTML = data.pools.map(p => {
           const b = calc(data.entries.filter(x => x.poolId === p.id));
-          const inc = (b["2010"]||0) + (b["4010"]||0);
+          const inc = (b["2010"]||0) + (b["4010"]||0) + (b["4040"]||0);
           const out = (b["5100"]||0) + (b["5200"]||0) + (b["6120"]||0);
-          return `<div class="row"><strong>${esc(p.name)}</strong><span>In: ${fmt(inc)} • Out: ${fmt(out)}</span></div>`;
+          return `<div class="row"><strong>${esc(p.name)} ${p.status==="CLOSED"?"🔒":""}</strong><span>In: ${fmt(inc)} • Out: ${fmt(out)}</span></div>`;
         }).join("");
 
         document.getElementById("obs-ledger").innerHTML = data.entries.slice(0, 40).map(je => `
