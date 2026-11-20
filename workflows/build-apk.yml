@@ -1,0 +1,73 @@
+name: Build Talani Accounts APK
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'docs/ledger.enc.json'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Configure Stable Debug Keystore
+        id: keystore
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p ~/.android
+          if [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > ~/.android/debug.keystore
+            echo "created=false" >> $GITHUB_OUTPUT
+          else
+            keytool -genkey -v -keystore ~/.android/debug.keystore \
+              -storepass android -alias androiddebugkey -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Talani Accounts,O=Talani Adventures,C=KE"
+            base64 -w 0 ~/.android/debug.keystore > debug-keystore-base64.txt
+            echo "created=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload One-Time Keystore Text
+        if: steps.keystore.outputs.created == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SAVE-TO-SECRET-keystore
+          path: debug-keystore-base64.txt
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Android project & sync web assets
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Bump versionCode & Build Debug APK
+        run: |
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Talani-Accounts-v0.1-build-${{ github.run_number }}
+          path: android/app/build/outputs/apk/debug/app-debug.apk
