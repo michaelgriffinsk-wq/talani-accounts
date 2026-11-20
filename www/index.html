@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Talani Adventures Accounts</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Talani Accounts</h1>
+      <div class="sub-line" id="header-sync-status">Local Master • v0.1</div>
+    </div>
+    <div class="header-right">
+      <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
+      <button id="sync-now-btn" class="btn-mini">☁ Sync</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. DASHBOARD -->
+    <section id="view-dash" class="view active">
+      <div class="card hero-card">
+        <div class="muted">Free Operating Cash (Safe to Spend)</div>
+        <div class="hero-amount" id="dash-free-cash">KSh 0</div>
+        <div class="split-row">
+          <div>
+            <span class="muted">Total Cash</span>
+            <strong id="dash-total-cash">KSh 0</strong>
+          </div>
+          <div>
+            <span class="muted">Restricted (Deposits + A/P)</span>
+            <strong class="warn-text" id="dash-restricted-cash">KSh 0</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Accounting Equation Check</h3>
+        <div class="stats-grid" id="dash-equation-grid"></div>
+      </div>
+
+      <div class="card">
+        <h3>Subsidiaries / Entities</h3>
+        <div id="dash-entity-summary"></div>
+      </div>
+
+      <div class="card">
+        <h3>Active Trip & Project Pools</h3>
+        <div id="dash-pool-summary"></div>
+      </div>
+    </section>
+
+    <!-- 2. AI M-PESA PARSER & MANUAL ENTRY -->
+    <section id="view-ai" class="view">
+      <div class="card">
+        <h2>✨ AI M-Pesa & Message Parser</h2>
+        <p class="muted">Paste any M-Pesa SMS. Gemini extracts the code, direction, principal, and fee, checks for duplicates, and drafts a balanced journal entry.</p>
+        <textarea id="mpesa-sms-input" rows="4" placeholder="Paste M-Pesa confirmation SMS here..."></textarea>
+        <input type="text" id="mpesa-hint-input" placeholder="Optional note (e.g., Gatamaiyu bus deposit, Client deposit - John)" />
+        <div class="form-row">
+          <select id="mpesa-entity-select"></select>
+          <select id="mpesa-pool-select"></select>
+        </div>
+        <button id="parse-mpesa-btn" class="btn primary">✨ Parse & Draft Entry</button>
+        <div id="parse-status" class="muted small"></div>
+      </div>
+
+      <!-- DRAFT REVIEW BOX -->
+      <div id="draft-card" class="card hidden">
+        <div class="card-top">
+          <h3>Review Balanced Draft</h3>
+          <span id="draft-dir-badge" class="badge"></span>
+        </div>
+        <div id="duplicate-alert" class="alert-box hidden"></div>
+
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">M-Pesa Code</label>
+            <input type="text" id="draft-code" />
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Date</label>
+            <input type="date" id="draft-date" />
+          </div>
+        </div>
+
+        <label class="field-label">Counterparty / Description</label>
+        <input type="text" id="draft-memo" />
+
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">Principal (KSh)</label>
+            <input type="number" id="draft-amount" step="0.01" />
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Tx Fee (KSh → 6120)</label>
+            <input type="number" id="draft-fee" step="0.01" value="0" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">Cash Pool Account</label>
+            <select id="draft-cash-acc"></select>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Offset Account (CoA)</label>
+            <select id="draft-offset-acc"></select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">Entity / Brand</label>
+            <select id="draft-entity"></select>
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Trip / Project Pool</label>
+            <select id="draft-pool"></select>
+          </div>
+        </div>
+
+        <div class="form-row" style="align-items:center; margin-bottom:10px;">
+          <input type="checkbox" id="draft-etims" style="width:18px;height:18px;margin:0;" />
+          <label for="draft-etims" style="font-size:0.82rem;">Valid KRA eTIMS Receipt Verified</label>
+        </div>
+
+        <div id="draft-preview-lines" class="journal-preview"></div>
+
+        <div class="btn-row">
+          <button id="post-draft-btn" class="btn success">✓ Approve & Post</button>
+          <button id="cancel-draft-btn" class="btn secondary">Discard</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. IMMUTABLE GENERAL LEDGER -->
+    <section id="view-ledger" class="view">
+      <div class="card">
+        <div class="card-top">
+          <h2>General Ledger</h2>
+          <button id="open-manual-btn" class="btn-mini">+ Manual JE</button>
+        </div>
+        <div class="form-row">
+          <select id="filter-entity"></select>
+          <select id="filter-pool"></select>
+        </div>
+        <input type="text" id="filter-search" placeholder="Search M-Pesa code, memo, or account..." />
+      </div>
+      <div id="ledger-list"></div>
+    </section>
+
+    <!-- 4. SETUP, ENTITIES, POOLS & SYNC -->
+    <section id="view-setup" class="view">
+      <div class="card">
+        <h3>Subsidiaries / Entities (Editable)</h3>
+        <div id="entity-list"></div>
+        <div class="add-row">
+          <input type="text" id="new-entity-name" placeholder="New subsidiary / brand name..." />
+          <button id="add-entity-btn" class="btn-mini">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Trip & Project Pools (Editable)</h3>
+        <div id="pool-list"></div>
+        <div class="add-row">
+          <input type="text" id="new-pool-name" placeholder="New trip or project pool..." />
+          <button id="add-pool-btn" class="btn-mini">+ Add</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>AI & Encrypted Observer Sync</h3>
+        <p class="muted">Keys stay 100% local on the accountant's device. Sync encrypts the ledger with AES-256 using your Team PIN before uploading to GitHub.</p>
+        <label class="field-label">Gemini API Key (AI M-Pesa Parser)</label>
+        <input type="password" id="cfg-gemini-key" placeholder="AIza..." />
+
+        <label class="field-label">GitHub Repo (owner/repo)</label>
+        <input type="text" id="cfg-gh-repo" placeholder="michaelgriffinsk-wq/talani-accounts" />
+
+        <label class="field-label">GitHub Personal Access Token (Contents: Read/Write)</label>
+        <input type="password" id="cfg-gh-token" placeholder="ghp_... or github_pat_..." />
+
+        <label class="field-label">Shared Team PIN (For Observer Portal Decryption)</label>
+        <input type="password" id="cfg-team-pin" placeholder="e.g., 4–12 character secret PIN" />
+
+        <div class="btn-row">
+          <button id="save-cfg-btn" class="btn primary">Save Settings</button>
+          <button id="test-sync-btn" class="btn success">Encrypt & Sync Now</button>
+        </div>
+        <div id="cfg-status" class="muted small"></div>
+      </div>
+
+      <div class="card">
+        <h3>Local JSON Vault Backup</h3>
+        <div class="btn-row">
+          <button id="export-vault-btn" class="btn secondary">Export Vault</button>
+          <label class="btn secondary" style="display:block;">
+            Import Vault
+            <input type="file" id="import-vault-input" accept=".json" class="hidden" />
+          </label>
+        </div>
+        <div id="vault-status" class="muted small"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-target="view-dash">Dashboard</button>
+    <button class="nav-btn" data-target="view-ai">AI M-Pesa</button>
+    <button class="nav-btn" data-target="view-ledger">Ledger</button>
+    <button class="nav-btn" data-target="view-setup">Setup</button>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
