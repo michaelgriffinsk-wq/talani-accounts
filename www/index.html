@@ -10,7 +10,7 @@
   <header class="app-header">
     <div>
       <h1>Talani Accounts</h1>
-      <div class="sub-line" id="header-sync-status">Local Master • v0.1</div>
+      <div class="sub-line" id="header-sync-status">Local Master • v0.2</div>
     </div>
     <div class="header-right">
       <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
@@ -52,13 +52,13 @@
       </div>
     </section>
 
-    <!-- 2. AI M-PESA PARSER & MANUAL ENTRY -->
+    <!-- 2. AI M-PESA PARSER -->
     <section id="view-ai" class="view">
       <div class="card">
         <h2>✨ AI M-Pesa & Message Parser</h2>
         <p class="muted">Paste any M-Pesa SMS. Gemini extracts the code, direction, principal, and fee, checks for duplicates, and drafts a balanced journal entry.</p>
         <textarea id="mpesa-sms-input" rows="4" placeholder="Paste M-Pesa confirmation SMS here..."></textarea>
-        <input type="text" id="mpesa-hint-input" placeholder="Optional note (e.g., Gatamaiyu bus deposit, Client deposit - John)" />
+        <input type="text" id="mpesa-hint-input" placeholder="Optional note (e.g., Gatamaiyu bus deposit, Client deposit - Emily)" />
         <div class="form-row">
           <select id="mpesa-entity-select"></select>
           <select id="mpesa-pool-select"></select>
@@ -67,7 +67,6 @@
         <div id="parse-status" class="muted small"></div>
       </div>
 
-      <!-- DRAFT REVIEW BOX -->
       <div id="draft-card" class="card hidden">
         <div class="card-top">
           <h3>Review Balanced Draft</h3>
@@ -136,7 +135,113 @@
       </div>
     </section>
 
-    <!-- 3. IMMUTABLE GENERAL LEDGER -->
+    <!-- 3. TOUR OPERATIONS (v0.2) -->
+    <section id="view-ops" class="view">
+      <div class="sub-tabs" id="ops-subtabs">
+        <button class="pill active" data-ops="ops-ar">Clients (A/R)</button>
+        <button class="pill" data-ops="ops-ap">Suppliers (A/P)</button>
+        <button class="pill" data-ops="ops-float">Float & Partners</button>
+        <button class="pill" data-ops="ops-close">Trip Close</button>
+      </div>
+
+      <!-- 3A. CLIENTS A/R -->
+      <div id="ops-ar" class="ops-panel active">
+        <div class="card">
+          <h3>+ New Client Booking</h3>
+          <div class="form-row">
+            <select id="ar-entity"></select>
+            <select id="ar-pool"></select>
+          </div>
+          <input type="text" id="ar-name" placeholder="Client Full Name (e.g., Emily Githiri)" />
+          <div class="form-row">
+            <input type="number" id="ar-price" placeholder="Ticket Price (KSh)" />
+            <input type="number" id="ar-discount" placeholder="Discount (KSh)" value="0" />
+          </div>
+          <div class="form-row">
+            <input type="number" id="ar-deposit" placeholder="Initial Deposit Paid" value="0" />
+            <input type="text" id="ar-mpesa" placeholder="M-Pesa Code (optional)" />
+          </div>
+          <div class="form-row" style="align-items:center; margin-bottom:8px;">
+            <input type="checkbox" id="ar-agency" style="width:18px;height:18px;margin:0;" />
+            <label for="ar-agency" style="font-size:0.8rem;">Agency / Commission-Only Booking (e.g., B2B Lodging)</label>
+          </div>
+          <button id="add-ar-btn" class="btn primary">Record Booking & Post Deposit</button>
+        </div>
+        <div id="ar-list"></div>
+      </div>
+
+      <!-- 3B. SUPPLIERS A/P -->
+      <div id="ops-ap" class="ops-panel">
+        <div class="card">
+          <h3>+ New Supplier Bill / Quote</h3>
+          <div class="form-row">
+            <select id="ap-entity"></select>
+            <select id="ap-pool"></select>
+          </div>
+          <input type="text" id="ap-vendor" placeholder="Vendor Name (e.g., Ngong 26-Seater Bus)" />
+          <div class="form-row">
+            <select id="ap-cogs">
+              <option value="5100">5100 — Fixed Trip COGS</option>
+              <option value="5200">5200 — Variable Trip COGS</option>
+              <option value="6100">6100 — General Overhead</option>
+            </select>
+            <input type="date" id="ap-due" />
+          </div>
+          <input type="number" id="ap-total" placeholder="Total Quoted Amount (KSh)" />
+          <button id="add-ap-btn" class="btn primary">Log Supplier Payable (A/P)</button>
+        </div>
+        <div id="ap-list"></div>
+      </div>
+
+      <!-- 3C. TRAIL FLOAT & PARTNER REIMBURSEMENTS -->
+      <div id="ops-float" class="ops-panel">
+        <div class="card">
+          <h3>Trail Float (Petty Cash Imprest)</h3>
+          <div class="form-row">
+            <select id="fl-entity"></select>
+            <select id="fl-pool"></select>
+          </div>
+          <div class="form-row">
+            <input type="text" id="fl-holder" placeholder="Coordinator Name" />
+            <input type="number" id="fl-amount" placeholder="Cash Issued (KSh)" />
+          </div>
+          <button id="add-float-btn" class="btn primary">Issue Trail Float (1010 → 1030)</button>
+        </div>
+        <div id="float-list"></div>
+
+        <div class="card" style="margin-top:12px;">
+          <h3>Partner Out-of-Pocket Expense</h3>
+          <div class="form-row">
+            <select id="re-entity"></select>
+            <select id="re-pool"></select>
+          </div>
+          <div class="form-row">
+            <input type="text" id="re-partner" placeholder="Partner / Co-organizer Name" />
+            <input type="number" id="re-amount" placeholder="Amount Paid (KSh)" />
+          </div>
+          <input type="text" id="re-memo" placeholder="What was paid for? (e.g., Snacks & Water)" />
+          <select id="re-cogs">
+            <option value="5200">5200 — Variable Trip COGS</option>
+            <option value="5100">5100 — Fixed Trip COGS</option>
+            <option value="6100">6100 — General Overhead</option>
+          </select>
+          <button id="add-reimb-btn" class="btn primary">Log Partner Reimbursement (CR 2030)</button>
+        </div>
+        <div id="reimb-list"></div>
+      </div>
+
+      <!-- 3D. 4-STEP TRIP CLOSE WATERFALL -->
+      <div id="ops-close" class="ops-panel">
+        <div class="card">
+          <h3>4-Step Trip Close Waterfall</h3>
+          <p class="muted">Select a Trip Pool to audit open items, recognize Deferred → Earned Revenue, allocate reserves, and lock the pool.</p>
+          <select id="close-pool-select"></select>
+          <div id="close-audit-box" style="margin-top:10px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. IMMUTABLE GENERAL LEDGER -->
     <section id="view-ledger" class="view">
       <div class="card">
         <div class="card-top">
@@ -152,7 +257,7 @@
       <div id="ledger-list"></div>
     </section>
 
-    <!-- 4. SETUP, ENTITIES, POOLS & SYNC -->
+    <!-- 5. SETUP, ENTITIES, POOLS & SYNC -->
     <section id="view-setup" class="view">
       <div class="card">
         <h3>Subsidiaries / Entities (Editable)</h3>
@@ -182,10 +287,10 @@
         <input type="text" id="cfg-gh-repo" placeholder="michaelgriffinsk-wq/talani-accounts" />
 
         <label class="field-label">GitHub Personal Access Token (Contents: Read/Write)</label>
-        <input type="password" id="cfg-gh-token" placeholder="ghp_... or github_pat_..." />
+        <input type="password" id="cfg-gh-token" placeholder="github_pat_..." />
 
         <label class="field-label">Shared Team PIN (For Observer Portal Decryption)</label>
-        <input type="password" id="cfg-team-pin" placeholder="e.g., 4–12 character secret PIN" />
+        <input type="password" id="cfg-team-pin" placeholder="4–12 character secret PIN" />
 
         <div class="btn-row">
           <button id="save-cfg-btn" class="btn primary">Save Settings</button>
@@ -209,8 +314,9 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-target="view-dash">Dashboard</button>
+    <button class="nav-btn active" data-target="view-dash">Dash</button>
     <button class="nav-btn" data-target="view-ai">AI M-Pesa</button>
+    <button class="nav-btn" data-target="view-ops">Ops</button>
     <button class="nav-btn" data-target="view-ledger">Ledger</button>
     <button class="nav-btn" data-target="view-setup">Setup</button>
   </nav>
