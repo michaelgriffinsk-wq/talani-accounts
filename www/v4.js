@@ -17,6 +17,7 @@
       document.querySelectorAll("#view-reports .ops-panel").forEach((x) => x.classList.remove("active"));
       p.classList.add("active");
       document.getElementById(p.dataset.rep)?.classList.add("active");
+      renderV4();
     });
   });
 
@@ -98,13 +99,16 @@ Return ONLY raw JSON:
     const netProfit = grossProfit - opex;
     const margin = netRev > 0 ? Math.round((netProfit / netRev) * 100) : 0;
 
-    document.getElementById("rep-pnl-box").innerHTML = `
-      <div class="list-row"><span>Gross Revenue</span><strong>${fmtKES(grossRev)}</strong></div>
-      <div class="list-row"><span>Less: Discounts (4090)</span><span>(${fmtKES(discounts)})</span></div>
-      <div class="list-row"><span>Direct Trip & Merch COGS</span><span>(${fmtKES(cogs)})</span></div>
-      <div class="list-row"><strong>Gross Profit</strong><strong>${fmtKES(grossProfit)}</strong></div>
-      <div class="list-row"><span>Operating Expenses & Fees</span><span>(${fmtKES(opex)})</span></div>
-      <div class="list-row"><strong>Net Profit (${margin}% Margin)</strong><strong style="color:${netProfit >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(netProfit)}</strong></div>`;
+    const pnlEl = document.getElementById("rep-pnl-box");
+    if (pnlEl) {
+      pnlEl.innerHTML = `
+        <div class="list-row"><span>Gross Revenue</span><strong>${fmtKES(grossRev)}</strong></div>
+        <div class="list-row"><span>Less: Discounts (4090)</span><span>(${fmtKES(discounts)})</span></div>
+        <div class="list-row"><span>Direct Trip & Merch COGS</span><span>(${fmtKES(cogs)})</span></div>
+        <div class="list-row"><strong>Gross Profit</strong><strong>${fmtKES(grossProfit)}</strong></div>
+        <div class="list-row"><span>Operating Expenses & Fees</span><span>(${fmtKES(opex)})</span></div>
+        <div class="list-row"><strong>Net Profit (${margin}% Margin)</strong><strong style="color:${netProfit >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(netProfit)}</strong></div>`;
+    }
 
     // Balance Sheet
     const cash = (b["1010"] || 0) + (b["1020"] || 0) + (b["1030"] || 0);
@@ -114,24 +118,31 @@ Return ONLY raw JSON:
     const totalLiab = (b["2010"] || 0) + (b["2020"] || 0) + (b["2030"] || 0) + (b["2040"] || 0) + (b["2050"] || 0) + (b["2100"] || 0);
     const equity = (b["3010"] || 0) + (b["3020"] || 0) + (b["3025"] || 0) - (b["3030"] || 0) + netProfit;
 
-    document.getElementById("rep-bs-box").innerHTML = `
-      <div class="list-row"><span>Cash & Trail Floats</span><strong>${fmtKES(cash)}</strong></div>
-      <div class="list-row"><span>Inventory + Net Fixed Assets</span><strong>${fmtKES(inv + faNet)}</strong></div>
-      <div class="list-row"><strong>Total Assets</strong><strong>${fmtKES(totalAssets)}</strong></div>
-      <div class="list-row"><span>Deferred Deposits & Vouchers</span><span>${fmtKES((b["2010"] || 0) + (b["2050"] || 0))}</span></div>
-      <div class="list-row"><span>A/P, Partners, Taxes & Loans</span><span>${fmtKES((b["2020"] || 0) + (b["2030"] || 0) + (b["2040"] || 0) + (b["2100"] || 0))}</span></div>
-      <div class="list-row"><strong>Total Liabilities + Equity</strong><strong>${fmtKES(totalLiab + equity)}</strong></div>`;
+    const bsEl = document.getElementById("rep-bs-box");
+    if (bsEl) {
+      bsEl.innerHTML = `
+        <div class="list-row"><span>Cash & Trail Floats</span><strong>${fmtKES(cash)}</strong></div>
+        <div class="list-row"><span>Accounts Receivable (A/R)</span><strong>${fmtKES(b["1100"] || 0)}</strong></div>
+        <div class="list-row"><span>Inventory + Net Fixed Assets</span><strong>${fmtKES(inv + faNet)}</strong></div>
+        <div class="list-row"><strong>Total Assets</strong><strong>${fmtKES(totalAssets)}</strong></div>
+        <div class="list-row"><span>Deferred Deposits & Vouchers</span><span>${fmtKES((b["2010"] || 0) + (b["2050"] || 0))}</span></div>
+        <div class="list-row"><span>A/P, Partners, Taxes & Loans</span><span>${fmtKES((b["2020"] || 0) + (b["2030"] || 0) + (b["2040"] || 0) + (b["2100"] || 0))}</span></div>
+        <div class="list-row"><strong>Total Liabilities + Equity</strong><strong>${fmtKES(totalLiab + equity)}</strong></div>`;
+    }
 
     // Cash Flow (Direct summary)
     const investing = -(b["1500"] || 0);
     const financing = (b["2100"] || 0) + (b["3010"] || 0) - (b["3030"] || 0);
     const operating = cash - investing - financing;
 
-    document.getElementById("rep-cf-box").innerHTML = `
-      <div class="list-row"><span>Operating Cash Flow</span><strong>${fmtKES(operating)}</strong></div>
-      <div class="list-row"><span>Investing Cash Flow (CapEx)</span><strong>${fmtKES(investing)}</strong></div>
-      <div class="list-row"><span>Financing (Loans / Capital / Draws)</span><strong>${fmtKES(financing)}</strong></div>
-      <div class="list-row"><strong>Net Cash Position</strong><strong style="color:var(--accent)">${fmtKES(cash)}</strong></div>`;
+    const cfEl = document.getElementById("rep-cf-box");
+    if (cfEl) {
+      cfEl.innerHTML = `
+        <div class="list-row"><span>Operating Cash Flow</span><strong>${fmtKES(operating)}</strong></div>
+        <div class="list-row"><span>Investing Cash Flow (CapEx)</span><strong>${fmtKES(investing)}</strong></div>
+        <div class="list-row"><span>Financing (Loans / Capital / Draws)</span><strong>${fmtKES(financing)}</strong></div>
+        <div class="list-row"><strong>Net Cash Position</strong><strong style="color:var(--accent)">${fmtKES(cash)}</strong></div>`;
+    }
   }
 
   // ================= 3. BUDGET VS ACTUAL & AGING =================
@@ -149,8 +160,10 @@ Return ONLY raw JSON:
   function renderVarianceAndAging() {
     const pid = document.getElementById("var-pool-select")?.value;
     const bud = (ledger.budgets || {})[pid] || { fixed: 0, variable: 0 };
-    document.getElementById("var-bud-fixed").value = bud.fixed || "";
-    document.getElementById("var-bud-var").value = bud.variable || "";
+    const fixInp = document.getElementById("var-bud-fixed");
+    const varInp = document.getElementById("var-bud-var");
+    if (fixInp) fixInp.value = bud.fixed || "";
+    if (varInp) varInp.value = bud.variable || "";
 
     const b = computeBalances(ledger.entries.filter((e) => e.poolId === pid));
     const actFix = b["5100"] || 0;
@@ -158,9 +171,12 @@ Return ONLY raw JSON:
     const varFix = bud.fixed - actFix;
     const varVar = bud.variable - actVar;
 
-    document.getElementById("var-report-box").innerHTML = `
-      <div class="list-row"><span>Fixed COGS (5100)</span><span>Act: ${fmtKES(actFix)} | Var: <strong style="color:${varFix >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(varFix)}</strong></span></div>
-      <div class="list-row"><span>Variable COGS (5200)</span><span>Act: ${fmtKES(actVar)} | Var: <strong style="color:${varVar >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(varVar)}</strong></span></div>`;
+    const varBox = document.getElementById("var-report-box");
+    if (varBox) {
+      varBox.innerHTML = `
+        <div class="list-row"><span>Fixed COGS (5100)</span><span>Act: ${fmtKES(actFix)} | Var: <strong style="color:${varFix >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(varFix)}</strong></span></div>
+        <div class="list-row"><span>Variable COGS (5200)</span><span>Act: ${fmtKES(actVar)} | Var: <strong style="color:${varVar >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(varVar)}</strong></span></div>`;
+    }
 
     // Aging (0-7, 8-30, 30+ days)
     const now = Date.now();
@@ -178,12 +194,47 @@ Return ONLY raw JSON:
       if (d <= 7) ap.b1 += bal; else if (d <= 30) ap.b2 += bal; else ap.b3 += bal;
     });
 
-    document.getElementById("aging-box").innerHTML = `
-      <div class="list-row"><strong>Client A/R (0-7d / 8-30d / 30+d)</strong><span>${fmtKES(ar.b1)} / ${fmtKES(ar.b2)} / ${fmtKES(ar.b3)}</span></div>
-      <div class="list-row"><strong>Supplier A/P (0-7d / 8-30d / 30+d)</strong><span class="warn-text">${fmtKES(ap.b1)} / ${fmtKES(ap.b2)} / ${fmtKES(ap.b3)}</span></div>`;
+    const agingBox = document.getElementById("aging-box");
+    if (agingBox) {
+      agingBox.innerHTML = `
+        <div class="list-row"><strong>Client A/R (0-7d / 8-30d / 30+d)</strong><span>${fmtKES(ar.b1)} / ${fmtKES(ar.b2)} / ${fmtKES(ar.b3)}</span></div>
+        <div class="list-row"><strong>Supplier A/P (0-7d / 8-30d / 30+d)</strong><span class="warn-text">${fmtKES(ap.b1)} / ${fmtKES(ap.b2)} / ${fmtKES(ap.b3)}</span></div>`;
+    }
   }
 
-  // ================= 4. CPA CSV EXPORTS (Android Share + Desktop Download) =================
+  function renderV4() {
+    const repEnt = document.getElementById("rep-entity");
+    const repPool = document.getElementById("rep-pool");
+    const varPool = document.getElementById("var-pool-select");
+
+    if (repEnt) {
+      const prev = repEnt.value;
+      repEnt.innerHTML = `<option value="all">All Subsidiaries / Brands</option>` +
+        (ledger.entities || []).map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+      if (prev && (prev === "all" || ledger.entities.some((e) => e.id === prev))) repEnt.value = prev;
+    }
+    if (repPool) {
+      const prev = repPool.value;
+      repPool.innerHTML = `<option value="all">All Trip & Project Pools</option>` +
+        (ledger.pools || []).map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+      if (prev && (prev === "all" || ledger.pools.some((p) => p.id === prev))) repPool.value = prev;
+    }
+    if (varPool) {
+      const prev = varPool.value;
+      varPool.innerHTML = (ledger.pools || [])
+        .map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+      if (prev && ledger.pools.some((p) => p.id === prev)) varPool.value = prev;
+    }
+
+    renderFinancials();
+    renderVarianceAndAging();
+  }
+
+  document.getElementById("rep-entity")?.addEventListener("change", renderFinancials);
+  document.getElementById("rep-pool")?.addEventListener("change", renderFinancials);
+  document.getElementById("var-pool-select")?.addEventListener("change", renderVarianceAndAging);
+
+  // ================= 4. CPA CSV & VAULT EXPORTS (Android Share + Desktop Download) =================
   window.nativeExportFile = async function (filename, content, statusEl) {
     try { await navigator.clipboard.writeText(content); } catch {}
 
@@ -193,12 +244,12 @@ Return ONLY raw JSON:
         const saved = await Filesystem.writeFile({
           path: filename,
           data: content,
-          directory: "DOCUMENTS",
+          directory: "CACHE",
           encoding: "utf8"
         });
-        if (statusEl) statusEl.textContent = `✓ Saved to Documents/${filename}`;
+        if (statusEl) statusEl.textContent = `✓ Ready: ${filename}`;
         if (Share) {
-          await Share.share({ title: filename, url: saved.uri });
+          await Share.share({ title: filename, text: filename, url: saved.uri, dialogTitle: `Save or Send ${filename}` });
         }
         return;
       } catch (err) {
@@ -206,7 +257,23 @@ Return ONLY raw JSON:
         return;
       }
     }
-    if (statusEl) statusEl.textContent = "✓ Copied to clipboard (paste into a .json or .csv file).";
+
+    // Standard browser / desktop download fallback
+    try {
+      const mime = filename.endsWith(".json") ? "application/json" : "text/csv;charset=utf-8;";
+      const blob = new Blob([content], { type: mime });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      if (statusEl) statusEl.textContent = `✓ Downloaded ${filename}`;
+    } catch {
+      if (statusEl) statusEl.textContent = "✓ Copied to clipboard.";
+    }
   };
 
   async function downloadCSV(filename, rows) {
@@ -241,7 +308,19 @@ Return ONLY raw JSON:
     downloadCSV(`Talani_General_Ledger_${todayStr()}.csv`, rows);
   });
 
-    // ================= 5. CONVERSATIONAL AI CFO (MULTI-THREAD + MARKDOWN) =================
+  // Override Export Vault button so Android WebView opens native Share/Save sheet cleanly
+  const oldExportBtn = document.getElementById("export-vault-btn");
+  if (oldExportBtn) {
+    const newExportBtn = oldExportBtn.cloneNode(true);
+    oldExportBtn.parentNode.replaceChild(newExportBtn, oldExportBtn);
+    newExportBtn.addEventListener("click", () => {
+      const statusEl = document.getElementById("vault-status");
+      const filename = `Talani_Vault_${todayStr()}.json`;
+      window.nativeExportFile(filename, JSON.stringify(ledger, null, 2), statusEl);
+    });
+  }
+
+  // ================= 5. CONVERSATIONAL AI CFO (MULTI-THREAD + MARKDOWN) =================
   const CFO_KEY = "talani_cfo_chats_v1";
   let cfoStore = (() => {
     try { return JSON.parse(localStorage.getItem(CFO_KEY)) || { activeId: null, threads: [] }; }
@@ -285,7 +364,6 @@ Return ONLY raw JSON:
       const line = lines[i].trim();
       if (!line) { closeLists(); continue; }
 
-      // Markdown table
       if (line.startsWith("|") && line.endsWith("|")) {
         if (/^\|[\s\-:|]+\|$/.test(line)) continue;
         const cells = line.slice(1, -1).split("|").map((c) => inline(c.trim()));
@@ -439,7 +517,6 @@ Return ONLY raw JSON:
   });
   renderCfoUI();
 
-
   // ================= 6. SHOW UNPAID CLIENT BALANCES =================
   document.getElementById("show-owed-btn")?.addEventListener("click", () => {
     const box = document.getElementById("ar-owed-box");
@@ -525,7 +602,6 @@ Return ONLY raw JSON:
     document.getElementById("draft-ar-new-fields")?.classList.toggle("hidden", e.target.value !== "new");
   });
 
-  // Auto-refresh bridge whenever the AI draft card opens
   const draftCardEl = document.getElementById("draft-card");
   if (draftCardEl) {
     new MutationObserver(() => {
@@ -533,7 +609,6 @@ Return ONLY raw JSON:
     }).observe(draftCardEl, { attributes: true, attributeFilter: ["class"] });
   }
 
-  // Capture A/R link right before app.js posts & clears the draft
   document.getElementById("post-draft-btn")?.addEventListener("click", () => {
     const bridge = document.getElementById("draft-ar-bridge");
     if (!bridge || bridge.classList.contains("hidden")) return;
@@ -566,7 +641,7 @@ Return ONLY raw JSON:
     document.getElementById("draft-ar-price").value = "";
   }, true);
 
-    // ================= 8. TRIP ACCOUNTS (BUDGET, BREAK-EVEN & LIVE TRACKER) =================
+  // ================= 8. TRIP ACCOUNTS (BUDGET, BREAK-EVEN & LIVE TRACKER) =================
   const DEFAULT_TRIP_BUDGET = () => ({
     fixed: [
       { id: "fx_bus", name: "Transport / Bus Hire", amount: 30000, billed: false },
@@ -607,7 +682,6 @@ Return ONLY raw JSON:
 
     const tb = getTripBudget(poolId);
 
-    // 1. LIVE LEDGER TRACKER (Customers vs Vendors)
     const poolEntries = ledger.entries.filter((e) => e.poolId === poolId);
     const pb = computeBalances(poolEntries);
     const custPaid = (pb["2010"] || 0) + (pb["4010"] || 0) + (pb["4020"] || 0) + (pb["4040"] || 0);
@@ -639,7 +713,6 @@ Return ONLY raw JSON:
           </div>`).join("")
       : `<div class="muted small">✓ No unpaid vendor bills for this trip.</div>`;
 
-    // 2. FIXED COSTS LIST (with + Log Bill shortcut)
     const fixedTotal = tb.fixed.reduce((s, x) => s + Number(x.amount || 0), 0);
     document.getElementById("ta-fixed-total").textContent = fmtKES(fixedTotal);
     document.getElementById("ta-fixed-list").innerHTML = tb.fixed.map((item, idx) => `
@@ -652,7 +725,6 @@ Return ONLY raw JSON:
         <button class="btn-mini danger ta-del-fix" data-idx="${idx}">×</button>
       </div>`).join("");
 
-    // 3. PER-HEAD COSTS LIST
     const varTotal = tb.variable.reduce((s, x) => s + Number(x.amount || 0), 0);
     document.getElementById("ta-var-total").textContent = `${fmtKES(varTotal)} / pax`;
     document.getElementById("ta-var-list").innerHTML = tb.variable.map((item, idx) => `
@@ -662,7 +734,6 @@ Return ONLY raw JSON:
         <button class="btn-mini danger ta-del-var" data-idx="${idx}">×</button>
       </div>`).join("");
 
-    // 4. BREAK-EVEN & PROFIT CALCULATOR
     document.getElementById("ta-be-pax").value = tb.bePax;
     document.getElementById("ta-staff-pax").value = tb.staffPax;
     document.getElementById("ta-max-cap").value = tb.maxCap;
@@ -687,7 +758,6 @@ Return ONLY raw JSON:
       <div class="list-row"><span>Expected Profit at ${bePax} Pax (@ ${fmtKES(price)})</span><strong style="color:${profitAtBE >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(profitAtBE)}</strong></div>
       <div class="list-row"><strong>Target Profit at Max (${maxPaying} Paying)</strong><strong style="color:${profitAtMax >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(profitAtMax)}</strong></div>`;
 
-    // Bind inline events
     document.querySelectorAll(".ta-fix-amt").forEach((inp) => {
       inp.addEventListener("change", () => {
         tb.fixed[Number(inp.dataset.idx)].amount = Number(inp.value || 0);
@@ -793,14 +863,7 @@ Return ONLY raw JSON:
     renderTripAccounts();
   });
 
-  const prevRenderAllTA = window.renderAll;
-  window.renderAll = function () {
-    prevRenderAllTA();
-    renderTripAccounts();
-  };
-  renderTripAccounts();
-
-    // ================= 9. RBAC ROLE PINS & APPROVALS INBOX =================
+  // ================= 9. RBAC ROLE PINS & APPROVALS INBOX =================
   let approvalsQueue = { updatedAt: null, requests: [] };
   let approvalsSha = null;
 
@@ -824,7 +887,6 @@ Return ONLY raw JSON:
     return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  // Load saved local Role PIN inputs into Setup
   function populateRolePins() {
     const rp = secrets.rolePins || {};
     ["strategy", "growth", "ops", "marketing"].forEach((role) => {
@@ -856,7 +918,6 @@ Return ONLY raw JSON:
     document.getElementById("role-pins-status").textContent = "✓ Role PINs hashed & synced to Team Portal.";
   });
 
-  // Header Approvals button
   document.getElementById("open-approvals-btn")?.addEventListener("click", () => {
     document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
     document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
@@ -1099,9 +1160,18 @@ Return ONLY raw JSON:
     if (histEl) histEl.innerHTML = history.map((r) => renderReqCard(r, false)).join("") || `<div class="muted small">No decisions logged yet.</div>`;
   }
 
+  // Hook Trip Accounts + Reports into global renderAll
+  const prevRenderAllTA = window.renderAll;
+  window.renderAll = function () {
+    prevRenderAllTA();
+    renderTripAccounts();
+    renderV4();
+  };
+
+  renderTripAccounts();
+  renderV4();
   populateRolePins();
   if (navigator.onLine && secrets.ghRepo && secrets.ghToken && secrets.teamPin) {
     pullApprovalsQueue(true);
   }
-
 })();
