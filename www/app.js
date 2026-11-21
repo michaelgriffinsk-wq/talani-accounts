@@ -550,7 +550,7 @@ window.runTripClose = function (poolId) {
   } catch (e) { alert(e.message); }
 };
 
-// ================= GEMINI AI M-PESA PARSER =================
+// ================= GEMINI AI M-PESA & BANK PARSER =================
 async function callGeminiJSON(prompt) {
   if (!secrets.geminiKey) throw new Error("No Gemini API key set. Open Setup to paste your key.");
   let lastErr = "All Gemini models busy.";
@@ -591,16 +591,23 @@ document.getElementById("parse-mpesa-btn").addEventListener("click", async () =>
   const sms = document.getElementById("mpesa-sms-input").value.trim();
   const hint = document.getElementById("mpesa-hint-input").value.trim();
   const statusEl = document.getElementById("parse-status");
-  if (!sms) return alert("Paste an M-Pesa message first.");
+  if (!sms) return alert("Paste an M-Pesa, Bank, or Pesalink message first.");
 
-  statusEl.textContent = "Parsing M-Pesa message with Gemini...";
+  statusEl.textContent = "Parsing message with Gemini...";
   const coaList = COA.map((a) => `${a.code}: ${a.name}`).join("\n");
-  const prompt = `Extract Kenyan M-Pesa transaction details:
+  const prompt = `You are a Kenyan tour company accountant. Parse this M-Pesa, Bank SMS, Pesalink, or Bank-to-M-Pesa transfer message.
 SMS: "${sms}"
 Hint: "${hint || "None"}"
 CoA:\n${coaList}
-Rules: direction="IN" if received else "OUT". amount=principal KES, fee=tx cost KES (0 if IN), mpesaCode=exact code, date=YYYY-MM-DD (use ${todayStr()} if unclear), suggestedOffsetCode=best 4-digit CoA code (2010 for client deposits, 5100 fixed COGS, 5200 variable COGS, 6100 overhead).
-Reply ONLY JSON: {"mpesaCode":"","direction":"OUT","amount":0,"fee":0,"date":"YYYY-MM-DD","counterparty":"","memo":"","suggestedOffsetCode":"5100"}`;
+Rules:
+- direction="IN" if money was received, else "OUT".
+- amount=principal KES, fee=transaction charge KES (0 if IN).
+- Extract the transaction reference code (M-Pesa code or Bank/Pesalink ref) into "mpesaCode".
+- date=YYYY-MM-DD (use ${todayStr()} if unclear).
+- If money landed in or left M-Pesa (even if sent from a bank like KCB/Equity/Co-op), set "cashAccountCode" to "1010". If it is a direct Bank account alert, set "cashAccountCode" to "1020".
+- suggestedOffsetCode=best 4-digit CoA code (2010 for incoming client trip deposits, 5100 fixed COGS, 5200 variable COGS, 6100 overhead).
+Return ONLY raw JSON:
+{"mpesaCode":"","direction":"IN","amount":0,"fee":0,"date":"${todayStr()}","counterparty":"","memo":"","cashAccountCode":"1010","suggestedOffsetCode":"2010"}`;
 
   try {
     const parsed = await callGeminiJSON(prompt);
@@ -621,7 +628,7 @@ function openDraftEditor(data) {
   document.getElementById("draft-memo").value = data.memo || data.counterparty || "";
   document.getElementById("draft-amount").value = Number(data.amount || 0);
   document.getElementById("draft-fee").value = currentDraftDir === "OUT" ? Number(data.fee || 0) : 0;
-  document.getElementById("draft-cash-acc").value = "1010";
+  document.getElementById("draft-cash-acc").value = data.cashAccountCode || "1010";
   document.getElementById("draft-offset-acc").value = data.suggestedOffsetCode || (currentDraftDir === "IN" ? "2010" : "5100");
   document.getElementById("draft-entity").value = document.getElementById("mpesa-entity-select").value;
   document.getElementById("draft-pool").value = document.getElementById("mpesa-pool-select").value;
@@ -729,7 +736,7 @@ async function syncToGitHub(silent = false) {
     if (!put.ok) throw new Error((await put.json()).message || `HTTP ${put.status}`);
 
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    hdr.textContent = `Synced ${time} • v0.2`;
+    hdr.textContent = `Synced ${time} • v0.4`;
     if (!silent) document.getElementById("cfg-status").textContent = `✓ Synced to ${secrets.ghRepo} at ${time}.`;
   } catch (err) {
     hdr.textContent = "Sync failed (Local safe)";
@@ -784,7 +791,6 @@ document.getElementById("export-vault-btn").addEventListener("click", () => {
   const filename = `talani-accounts-vault-${todayStr()}.json`;
   window.nativeExportFile(filename, json, document.getElementById("vault-status"));
 });
-
 
 // ================= RENDERERS =================
 function populateDropdowns() {
