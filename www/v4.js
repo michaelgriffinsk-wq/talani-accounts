@@ -799,4 +799,309 @@ Return ONLY raw JSON:
     renderTripAccounts();
   };
   renderTripAccounts();
+
+    // ================= 9. RBAC ROLE PINS & APPROVALS INBOX =================
+  let approvalsQueue = { updatedAt: null, requests: [] };
+  let approvalsSha = null;
+
+  function b64ToBufLocal(b64) {
+    return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  }
+
+  async function decryptPayloadLocal(pkg, pin) {
+    const enc = new TextEncoder();
+    const keyMat = await crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: b64ToBufLocal(pkg.salt), iterations: 100000, hash: "SHA-256" },
+      keyMat, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
+    );
+    const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBufLocal(pkg.iv) }, key, b64ToBufLocal(pkg.ct));
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  async function sha256Hex(text) {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text || "")));
+    return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // Load saved local Role PIN inputs into Setup
+  function populateRolePins() {
+    const rp = secrets.rolePins || {};
+    ["strategy", "growth", "ops", "marketing"].forEach((role) => {
+      const el = document.getElementById("pin-" + role);
+      if (el && rp[role]) el.value = rp[role];
+    });
+  }
+
+  document.getElementById("save-role-pins-btn")?.addEventListener("click", async () => {
+    const roles = ["strategy", "growth", "ops", "marketing"];
+    const names = {
+      strategy: "Michael (Strategy & Clinical)",
+      growth: "Robert (Growth & Ops Backup)",
+      ops: "Edna (Tech & Ops)",
+      marketing: "Tiffany (Marketing & Brand)"
+    };
+    secrets.rolePins = secrets.rolePins || {};
+    ledger.rolePinHashes = ledger.rolePinHashes || {};
+
+    for (const r of roles) {
+      const val = (document.getElementById("pin-" + r)?.value || "").trim();
+      if (val) {
+        secrets.rolePins[r] = val;
+        ledger.rolePinHashes[r] = { name: names[r], hash: await sha256Hex(`${r}:${val}`) };
+      }
+    }
+    localStorage.setItem(SECRETS_KEY, JSON.stringify(secrets));
+    saveLedger(true);
+    document.getElementById("role-pins-status").textContent = "✓ Role PINs hashed & synced to Team Portal.";
+  });
+
+  // Header Approvals button
+  document.getElementById("open-approvals-btn")?.addEventListener("click", () => {
+    document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+    document.getElementById("view-approvals")?.classList.add("active");
+    pullApprovalsQueue();
+  });
+
+  document.getElementById("refresh-approvals-btn")?.addEventListener("click", () => pullApprovalsQueue());
+
+  async function pullApprovalsQueue(silent = false) {
+    const statusEl = document.getElementById("approvals-status");
+    if (!secrets.ghRepo || !secrets.ghToken || !secrets.teamPin) {
+      if (!silent && statusEl) statusEl.textContent = "Configure GitHub Repo, Token, and Team PIN in Setup first.";
+      return;
+    }
+    if (!silent && statusEl) statusEl.textContent = "Pulling encrypted approvals queue...";
+    try {
+      const apiUrl = `https://api.github.com/repos/${secrets.ghRepo.trim()}/contents/docs/approvals.enc.json`;
+      const res = await fetch(apiUrl, {
+        headers: { Authorization: `Bearer ${secrets.ghToken.trim()}`, Accept: "application/vnd.github+json" }
+      });
+      if (res.status === 404) {
+        approvalsQueue = { updatedAt: new Date().toISOString(), requests: [] };
+        approvalsSha = null;
+        if (!silent && statusEl) statusEl.textContent = "No pending team requests yet.";
+        renderApprovals();
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const file = await res.json();
+      approvalsSha = file.sha;
+      const pkg = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, "")))));
+      approvalsQueue = await decryptPayloadLocal(pkg, secrets.teamPin);
+      if (!silent && statusEl) statusEl.textContent = `✓ Queue synced (${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}).`;
+      renderApprovals();
+    } catch (err) {
+      if (!silent && statusEl) statusEl.textContent = "Pull failed: " + err.message;
+    }
+  }
+
+  async function pushApprovalsQueue() {
+    const apiUrl = `https://api.github.com/repos/${secrets.ghRepo.trim()}/contents/docs/approvals.enc.json`;
+    const headers = {
+      Authorization: `Bearer ${secrets.ghToken.trim()}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json"
+    };
+    const check = await fetch(apiUrl, { headers });
+    if (check.ok) approvalsSha = (await check.json()).sha;
+
+    approvalsQueue.updatedAt = new Date().toISOString();
+    const encrypted = await encryptPayload(approvalsQueue, secrets.teamPin);
+    const contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(encrypted, null, 2))));
+    const put = await fetch(apiUrl, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ message: `Update approvals queue (${approvalsQueue.requests.length} items)`, content: contentB64, sha: approvalsSha || undefined })
+    });
+    if (!put.ok) throw new Error((await put.json()).message || `HTTP ${put.status}`);
+    approvalsSha = (await put.json()).content?.sha || approvalsSha;
+  }
+
+  window.approveAndPostReq = async function (reqId) {
+    const req = (approvalsQueue.requests || []).find((r) => r.id === reqId);
+    if (!req) return;
+    if (req.status === "PENDING_CO_APPROVAL" && !confirm("This item has NOT been co-approved by the department lead yet. Override and post anyway?")) {
+      return;
+    }
+
+    try {
+      let je = null;
+      const amt = Number(req.amount || 0);
+      const entId = req.entityId || ledger.entities[0]?.id;
+      const poolId = req.poolId || ledger.pools[0]?.id;
+      const acc = req.accountCode || "5100";
+
+      if (req.type === "SUPPLIER_BILL") {
+        je = validateAndPostJE({
+          date: todayStr(),
+          memo: `Supplier Bill (A/P): ${req.counterparty} — ${req.memo}`,
+          entityId: entId,
+          poolId,
+          lines: [
+            { accountCode: acc, debit: amt, credit: 0 },
+            { accountCode: "2020", debit: 0, credit: amt }
+          ]
+        });
+        ledger.payables.unshift({
+          id: "AP-" + Date.now(),
+          entityId: entId,
+          poolId,
+          vendor: req.counterparty || req.memo,
+          cogsCode: acc,
+          dueDate: req.dueDate || todayStr(),
+          totalAmount: amt,
+          paidAmount: 0,
+          status: "OPEN"
+        });
+      } else if (req.type === "SPEND_REQUEST") {
+        je = validateAndPostJE({
+          date: todayStr(),
+          mpesaCode: req.mpesaCode || "",
+          memo: `Approved Spend (${req.createdByName}): ${req.counterparty} — ${req.memo}`,
+          entityId: entId,
+          poolId,
+          lines: [
+            { accountCode: acc, debit: amt, credit: 0 },
+            { accountCode: req.cashAccountCode || "1010", debit: 0, credit: amt }
+          ]
+        });
+      } else if (req.type === "CLIENT_DEPOSIT") {
+        je = validateAndPostJE({
+          date: todayStr(),
+          mpesaCode: req.mpesaCode || "",
+          memo: `Client Deposit: ${req.counterparty}`,
+          entityId: entId,
+          poolId,
+          lines: [
+            { accountCode: req.cashAccountCode || "1010", debit: amt, credit: 0 },
+            { accountCode: "2010", debit: 0, credit: amt }
+          ]
+        });
+        const existing = (ledger.bookings || []).find(
+          (b) => b.status === "ACTIVE" && b.poolId === poolId && b.clientName.toLowerCase() === String(req.counterparty || "").trim().toLowerCase()
+        );
+        if (existing) {
+          existing.paid = (existing.paid || 0) + amt;
+        } else {
+          ledger.bookings.unshift({
+            id: "BK-" + Date.now(),
+            entityId: entId,
+            poolId,
+            clientName: req.counterparty || "Client",
+            ticketPrice: Number(req.ticketPrice || amt),
+            discount: Number(req.discount || 0),
+            paid: amt,
+            isAgency: false,
+            status: "ACTIVE"
+          });
+        }
+      } else if (req.type === "OUT_OF_POCKET") {
+        je = validateAndPostJE({
+          date: todayStr(),
+          memo: `Partner Paid (${req.counterparty || req.createdByName}): ${req.memo}`,
+          entityId: entId,
+          poolId,
+          lines: [
+            { accountCode: acc, debit: amt, credit: 0 },
+            { accountCode: "2030", debit: 0, credit: amt }
+          ]
+        });
+        ledger.reimbursements.unshift({
+          id: "RE-" + Date.now(),
+          entityId: entId,
+          poolId,
+          partnerName: req.counterparty || req.createdByName,
+          memo: req.memo,
+          amount: amt,
+          status: "OPEN"
+        });
+      }
+
+      req.status = "APPROVED_POSTED";
+      req.postedJeId = je?.id || "APPROVED_NO_JE";
+      req.decidedAt = new Date().toISOString();
+
+      saveLedger(true);
+      await pushApprovalsQueue();
+      renderAll();
+      renderApprovals();
+      alert("✓ Approved, posted to General Ledger, and synced!");
+    } catch (err) {
+      alert("Approval failed: " + err.message);
+    }
+  };
+
+  window.rejectReq = async function (reqId) {
+    const req = (approvalsQueue.requests || []).find((r) => r.id === reqId);
+    if (!req) return;
+    const reason = prompt(`Reject request from ${req.createdByName} (${fmtKES(req.amount)})?\nEnter reason:`);
+    if (reason === null) return;
+    req.status = "REJECTED";
+    req.financeNote = reason.trim() || "Rejected by Finance";
+    req.decidedAt = new Date().toISOString();
+    try {
+      await pushApprovalsQueue();
+      renderApprovals();
+    } catch (err) {
+      alert("Failed to update queue: " + err.message);
+    }
+  };
+
+  function renderReqCard(r, showActions) {
+    const pool = ledger.pools.find((p) => p.id === r.poolId)?.name || "";
+    const typeLabel = {
+      SUPPLIER_BILL: "Supplier Bill (A/P)",
+      SPEND_REQUEST: "Cash / Spend Request",
+      CLIENT_DEPOSIT: "Client Deposit",
+      OUT_OF_POCKET: "Out-of-Pocket Reimb.",
+      B2B_QUOTE: "B2B Quote / Discount"
+    }[r.type] || r.type;
+
+    return `
+      <div class="je-card">
+        <div class="card-top" style="margin-bottom:4px;">
+          <strong>${esc(r.counterparty || r.memo)}</strong>
+          <strong style="color:var(--accent)">${fmtKES(r.amount)}</strong>
+        </div>
+        <div class="je-meta">
+          <span class="tag">${esc(typeLabel)}</span>
+          <span class="tag">${esc(pool)}</span>
+          <span class="tag">By: ${esc(r.createdByName)}</span>
+          ${r.coApprovedBy ? `<span class="tag etims-ok">Co-Approved: ${esc(r.coApprovedBy)}</span>` : ""}
+          ${r.serviceVerified ? `<span class="tag etims-ok">Service Verified ✓</span>` : ""}
+        </div>
+        <div class="muted small" style="margin:4px 0 8px;">${esc(r.memo)}${r.mpesaCode ? ` • Ref: ${esc(r.mpesaCode)}` : ""}${r.financeNote ? ` • Note: ${esc(r.financeNote)}` : ""}</div>
+        ${showActions ? `
+          <div class="btn-row">
+            <button class="btn-mini ok" onclick="approveAndPostReq('${r.id}')">✓ Approve & Post</button>
+            <button class="btn-mini danger" onclick="rejectReq('${r.id}')">✕ Reject</button>
+          </div>` : `<span class="badge ${r.status === "APPROVED_POSTED" ? "ok" : "err"}">${r.status}</span>`}
+      </div>`;
+  }
+
+  function renderApprovals() {
+    const list = approvalsQueue.requests || [];
+    const ready = list.filter((r) => r.status === "PENDING_FINANCE");
+    const waiting = list.filter((r) => r.status === "PENDING_CO_APPROVAL");
+    const history = list.filter((r) => r.status === "APPROVED_POSTED" || r.status === "REJECTED").slice(0, 20);
+
+    const badge = document.getElementById("approvals-badge");
+    if (badge) badge.textContent = String(ready.length + waiting.length);
+
+    const readyEl = document.getElementById("approvals-ready-list");
+    const waitEl = document.getElementById("approvals-waiting-list");
+    const histEl = document.getElementById("approvals-history-list");
+
+    if (readyEl) readyEl.innerHTML = ready.map((r) => renderReqCard(r, true)).join("") || `<div class="muted small">✓ No items waiting for Finance sign-off.</div>`;
+    if (waitEl) waitEl.innerHTML = waiting.map((r) => renderReqCard(r, true)).join("") || `<div class="muted small">None awaiting department co-approval.</div>`;
+    if (histEl) histEl.innerHTML = history.map((r) => renderReqCard(r, false)).join("") || `<div class="muted small">No decisions logged yet.</div>`;
+  }
+
+  populateRolePins();
+  if (navigator.onLine && secrets.ghRepo && secrets.ghToken && secrets.teamPin) {
+    pullApprovalsQueue(true);
+  }
+
 })();
