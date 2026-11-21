@@ -565,4 +565,238 @@ Return ONLY raw JSON:
     document.getElementById("draft-ar-name").value = "";
     document.getElementById("draft-ar-price").value = "";
   }, true);
+
+    // ================= 8. TRIP ACCOUNTS (BUDGET, BREAK-EVEN & LIVE TRACKER) =================
+  const DEFAULT_TRIP_BUDGET = () => ({
+    fixed: [
+      { id: "fx_bus", name: "Transport / Bus Hire", amount: 30000, billed: false },
+      { id: "fx_guide", name: "Guide Costs", amount: 6000, billed: false },
+      { id: "fx_medic", name: "Emergency Response / Medic", amount: 5000, billed: false },
+      { id: "fx_float", name: "Floating Fees & Miscellaneous", amount: 3000, billed: false },
+      { id: "fx_emerg", name: "Emergency Fund / Contingency", amount: 5000, billed: false },
+      { id: "fx_mkt", name: "Marketing / Ads & Content", amount: 2000, billed: false },
+      { id: "fx_mpesa", name: "M-Pesa Transaction Fee Buffer", amount: 1000, billed: false }
+    ],
+    variable: [
+      { id: "vr_entry", name: "Park / Forest Entry Fees", amount: 300 },
+      { id: "vr_food", name: "Snacks, Meals & Water", amount: 500 }
+    ],
+    bePax: 18,
+    staffPax: 4,
+    maxCap: 26,
+    ticketPrice: 3000
+  });
+
+  function getTripBudget(poolId) {
+    ledger.tripBudgets = ledger.tripBudgets || {};
+    if (!ledger.tripBudgets[poolId]) {
+      ledger.tripBudgets[poolId] = DEFAULT_TRIP_BUDGET();
+    }
+    return ledger.tripBudgets[poolId];
+  }
+
+  function renderTripAccounts() {
+    const sel = document.getElementById("ta-pool-select");
+    if (!sel) return;
+
+    const prev = sel.value;
+    sel.innerHTML = ledger.pools.map((p) => `<option value="${p.id}">${esc(p.name)}${p.status === "CLOSED" ? " [LOCKED]" : ""}</option>`).join("");
+    if (prev && ledger.pools.some((p) => p.id === prev)) sel.value = prev;
+    const poolId = sel.value;
+    if (!poolId) return;
+
+    const tb = getTripBudget(poolId);
+
+    // 1. LIVE LEDGER TRACKER (Customers vs Vendors)
+    const poolEntries = ledger.entries.filter((e) => e.poolId === poolId);
+    const pb = computeBalances(poolEntries);
+    const custPaid = (pb["2010"] || 0) + (pb["4010"] || 0) + (pb["4020"] || 0) + (pb["4040"] || 0);
+    const custOwed = (ledger.bookings || [])
+      .filter((b) => b.poolId === poolId && b.status === "ACTIVE")
+      .reduce((s, b) => s + Math.max(0, b.ticketPrice - (b.discount || 0) - (b.paid || 0)), 0);
+
+    const poolPayables = (ledger.payables || []).filter((p) => p.poolId === poolId);
+    const vendorOwed = poolPayables
+      .filter((p) => p.status === "OPEN")
+      .reduce((s, p) => s + Math.max(0, p.totalAmount - (p.paidAmount || 0)), 0);
+    const totalCostsLogged = (pb["5100"] || 0) + (pb["5200"] || 0) + (pb["6100"] || 0) + (pb["6120"] || 0);
+    const vendorPaid = Math.max(0, totalCostsLogged - vendorOwed);
+    const netOffset = custPaid - (vendorPaid + vendorOwed);
+
+    document.getElementById("ta-live-summary").innerHTML = `
+      <div class="list-row"><span>Paid by Customers (Collected)</span><strong style="color:var(--accent)">${fmtKES(custPaid)}</strong></div>
+      <div class="list-row"><span>Still Owed by Customers (A/R)</span><strong class="warn-text">${fmtKES(custOwed)}</strong></div>
+      <div class="list-row"><span>Paid to Vendors (Disbursed)</span><strong>${fmtKES(vendorPaid)}</strong></div>
+      <div class="list-row"><span>Still Owed to Vendors (A/P)</span><strong style="color:var(--danger)">${fmtKES(vendorOwed)}</strong></div>
+      <div class="list-row"><strong>Net Cash Offset (Collected − All Vendor Costs)</strong><strong style="color:${netOffset >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(netOffset)}</strong></div>`;
+
+    const openBills = poolPayables.filter((p) => p.status === "OPEN");
+    document.getElementById("ta-live-vendors").innerHTML = openBills.length
+      ? `<div class="muted small" style="margin-bottom:4px;">Unpaid Vendor Bills for this Trip:</div>` + openBills.map((p) => `
+          <div class="list-row">
+            <span><strong>${esc(p.vendor)}</strong> <span class="muted small">(Due ${p.dueDate || "TBD"})</span></span>
+            <span><strong style="color:var(--danger)">${fmtKES(p.totalAmount - p.paidAmount)}</strong> <button class="btn-mini ok" onclick="paySupplierAP('${p.id}')">Pay</button></span>
+          </div>`).join("")
+      : `<div class="muted small">✓ No unpaid vendor bills for this trip.</div>`;
+
+    // 2. FIXED COSTS LIST (with + Log Bill shortcut)
+    const fixedTotal = tb.fixed.reduce((s, x) => s + Number(x.amount || 0), 0);
+    document.getElementById("ta-fixed-total").textContent = fmtKES(fixedTotal);
+    document.getElementById("ta-fixed-list").innerHTML = tb.fixed.map((item, idx) => `
+      <div class="list-row" style="gap:6px; align-items:center;">
+        <span style="flex:1; font-size:0.82rem;">${esc(item.name)}</span>
+        <input type="number" class="ta-fix-amt" data-idx="${idx}" value="${item.amount}" style="width:92px; margin:0; padding:6px;" />
+        ${item.billed
+          ? `<span class="badge ok">✓ Billed</span>`
+          : `<button class="btn-mini ta-bill-btn" data-idx="${idx}">+ Log Bill</button>`}
+        <button class="btn-mini danger ta-del-fix" data-idx="${idx}">×</button>
+      </div>`).join("");
+
+    // 3. PER-HEAD COSTS LIST
+    const varTotal = tb.variable.reduce((s, x) => s + Number(x.amount || 0), 0);
+    document.getElementById("ta-var-total").textContent = `${fmtKES(varTotal)} / pax`;
+    document.getElementById("ta-var-list").innerHTML = tb.variable.map((item, idx) => `
+      <div class="list-row" style="gap:6px; align-items:center;">
+        <span style="flex:1; font-size:0.82rem;">${esc(item.name)}</span>
+        <input type="number" class="ta-var-amt" data-idx="${idx}" value="${item.amount}" style="width:92px; margin:0; padding:6px;" />
+        <button class="btn-mini danger ta-del-var" data-idx="${idx}">×</button>
+      </div>`).join("");
+
+    // 4. BREAK-EVEN & PROFIT CALCULATOR
+    document.getElementById("ta-be-pax").value = tb.bePax;
+    document.getElementById("ta-staff-pax").value = tb.staffPax;
+    document.getElementById("ta-max-cap").value = tb.maxCap;
+    document.getElementById("ta-ticket-price").value = tb.ticketPrice;
+
+    const bePax = Math.max(1, Number(tb.bePax || 1));
+    const staffPax = Math.max(0, Number(tb.staffPax || 0));
+    const maxCap = Math.max(bePax + staffPax, Number(tb.maxCap || 26));
+    const maxPaying = Math.max(1, maxCap - staffPax);
+    const price = Number(tb.ticketPrice || 0);
+
+    const costAtBE = fixedTotal + varTotal * (bePax + staffPax);
+    const bePrice = costAtBE / bePax;
+    const profitAtBE = (price * bePax) - costAtBE;
+
+    const costAtMax = fixedTotal + varTotal * (maxPaying + staffPax);
+    const profitAtMax = (price * maxPaying) - costAtMax;
+
+    document.getElementById("ta-pricing-results").innerHTML = `
+      <div class="list-row"><span>Total Cost at ${bePax} Paying (+ ${staffPax} Staff)</span><strong>${fmtKES(costAtBE)}</strong></div>
+      <div class="list-row"><strong>Break-Even Price (${bePax} Pax)</strong><strong style="color:var(--blue)">${fmtKES(Math.ceil(bePrice))}</strong></div>
+      <div class="list-row"><span>Expected Profit at ${bePax} Pax (@ ${fmtKES(price)})</span><strong style="color:${profitAtBE >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(profitAtBE)}</strong></div>
+      <div class="list-row"><strong>Target Profit at Max (${maxPaying} Paying)</strong><strong style="color:${profitAtMax >= 0 ? "var(--accent)" : "var(--danger)"}">${fmtKES(profitAtMax)}</strong></div>`;
+
+    // Bind inline events
+    document.querySelectorAll(".ta-fix-amt").forEach((inp) => {
+      inp.addEventListener("change", () => {
+        tb.fixed[Number(inp.dataset.idx)].amount = Number(inp.value || 0);
+        saveLedger(true);
+        renderTripAccounts();
+      });
+    });
+    document.querySelectorAll(".ta-var-amt").forEach((inp) => {
+      inp.addEventListener("change", () => {
+        tb.variable[Number(inp.dataset.idx)].amount = Number(inp.value || 0);
+        saveLedger(true);
+        renderTripAccounts();
+      });
+    });
+    document.querySelectorAll(".ta-del-fix").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tb.fixed.splice(Number(btn.dataset.idx), 1);
+        saveLedger(true);
+        renderTripAccounts();
+      });
+    });
+    document.querySelectorAll(".ta-del-var").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        tb.variable.splice(Number(btn.dataset.idx), 1);
+        saveLedger(true);
+        renderTripAccounts();
+      });
+    });
+    document.querySelectorAll(".ta-bill-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const item = tb.fixed[Number(btn.dataset.idx)];
+        if (!item || item.amount <= 0) return alert("Enter a valid amount first.");
+        const vendor = prompt(`Log "${item.name}" (${fmtKES(item.amount)}) as a Supplier Bill.\nEnter Vendor Name:`, item.name);
+        if (!vendor) return;
+        const dueDate = prompt("Due Date (YYYY-MM-DD):", todayStr()) || todayStr();
+        const entId = ledger.entities[0]?.id || "ent_gik";
+        try {
+          validateAndPostJE({
+            date: todayStr(),
+            memo: `Supplier Bill (A/P): ${vendor}`,
+            entityId: entId,
+            poolId,
+            lines: [
+              { accountCode: "5100", debit: Number(item.amount), credit: 0 },
+              { accountCode: "2020", debit: 0, credit: Number(item.amount) }
+            ]
+          });
+          ledger.payables.unshift({
+            id: "AP-" + Date.now(),
+            entityId: entId,
+            poolId,
+            vendor: vendor.trim(),
+            cogsCode: "5100",
+            dueDate,
+            totalAmount: Number(item.amount),
+            paidAmount: 0,
+            status: "OPEN"
+          });
+          item.billed = true;
+          saveLedger(true);
+          renderAll();
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+
+  document.getElementById("ta-pool-select")?.addEventListener("change", renderTripAccounts);
+  ["ta-be-pax", "ta-staff-pax", "ta-max-cap", "ta-ticket-price"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("input", () => {
+      const poolId = document.getElementById("ta-pool-select")?.value;
+      if (!poolId) return;
+      const tb = getTripBudget(poolId);
+      tb.bePax = Number(document.getElementById("ta-be-pax").value || 1);
+      tb.staffPax = Number(document.getElementById("ta-staff-pax").value || 0);
+      tb.maxCap = Number(document.getElementById("ta-max-cap").value || 26);
+      tb.ticketPrice = Number(document.getElementById("ta-ticket-price").value || 0);
+      saveLedger(false);
+      renderTripAccounts();
+    });
+  });
+
+  document.getElementById("ta-add-fix-btn")?.addEventListener("click", () => {
+    const poolId = document.getElementById("ta-pool-select")?.value;
+    const name = document.getElementById("ta-new-fix-name").value.trim();
+    const amount = Number(document.getElementById("ta-new-fix-amt").value || 0);
+    if (!poolId || !name) return;
+    getTripBudget(poolId).fixed.push({ id: "fx_" + Date.now(), name, amount, billed: false });
+    document.getElementById("ta-new-fix-name").value = "";
+    document.getElementById("ta-new-fix-amt").value = "";
+    saveLedger(true);
+    renderTripAccounts();
+  });
+
+  document.getElementById("ta-add-var-btn")?.addEventListener("click", () => {
+    const poolId = document.getElementById("ta-pool-select")?.value;
+    const name = document.getElementById("ta-new-var-name").value.trim();
+    const amount = Number(document.getElementById("ta-new-var-amt").value || 0);
+    if (!poolId || !name) return;
+    getTripBudget(poolId).variable.push({ id: "vr_" + Date.now(), name, amount });
+    document.getElementById("ta-new-var-name").value = "";
+    document.getElementById("ta-new-var-amt").value = "";
+    saveLedger(true);
+    renderTripAccounts();
+  });
+
+  const prevRenderAllTA = window.renderAll;
+  window.renderAll = function () {
+    prevRenderAllTA();
+    renderTripAccounts();
+  };
+  renderTripAccounts();
 })();
