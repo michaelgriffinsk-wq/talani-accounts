@@ -14,6 +14,7 @@
     </div>
     <div class="header-right">
       <span id="gl-balance-badge" class="badge ok">✓ BALANCED</span>
+      <button id="open-approvals-btn" class="btn-mini">🔔 <span id="approvals-badge">0</span></button>
       <button id="open-reports-btn" class="btn-mini">📊 Reports</button>
       <button id="sync-now-btn" class="btn-mini">☁ Sync</button>
     </div>
@@ -543,6 +544,33 @@
       </div>
     </section>
 
+    <!-- 4C. MAKER-CHECKER APPROVALS INBOX (SHAKEELA FINAL GATE) -->
+    <section id="view-approvals" class="view">
+      <div class="card">
+        <div class="card-top">
+          <h2>🔔 Approvals Inbox</h2>
+          <button id="refresh-approvals-btn" class="btn-mini ok">↻ Pull Queue</button>
+        </div>
+        <p class="muted">Review team bills, spend requests, deposits, and reimbursements. Tapping <strong>Approve & Post</strong> posts the balanced Journal Entry to the General Ledger.</p>
+        <div id="approvals-status" class="muted small" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="card">
+        <h3>Ready for Finance Sign-Off</h3>
+        <div id="approvals-ready-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>Awaiting Dept Co-Approval</h3>
+        <div id="approvals-waiting-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>Recent Decisions</h3>
+        <div id="approvals-history-list"></div>
+      </div>
+    </section>
+
     <!-- 5. SETUP, ENTITIES, POOLS & SYNC -->
     <section id="view-setup" class="view">
       <div class="card">
@@ -583,6 +611,33 @@
           <button id="test-sync-btn" class="btn success">Encrypt & Sync Now</button>
         </div>
         <div id="cfg-status" class="muted small"></div>
+      </div>
+
+      <div class="card">
+        <h3>Team Role PINs (Level 2 Portal Access)</h3>
+        <p class="muted" style="margin-bottom:8px;">Set personal 4-digit PINs for Level 2 write/approval access in the Team Portal. Saved as SHA-256 hashes inside the synced ledger.</p>
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">Strategy & Clinical (Michael)</label>
+            <input type="password" id="pin-strategy" placeholder="4-digit PIN" />
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Growth & Ops Backup (Robert)</label>
+            <input type="password" id="pin-growth" placeholder="4-digit PIN" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div style="flex:1">
+            <label class="field-label">Tech & Ops (Edna)</label>
+            <input type="password" id="pin-ops" placeholder="4-digit PIN" />
+          </div>
+          <div style="flex:1">
+            <label class="field-label">Marketing & Brand (Tiffany)</label>
+            <input type="password" id="pin-marketing" placeholder="4-digit PIN" />
+          </div>
+        </div>
+        <button id="save-role-pins-btn" class="btn primary">Save Role PINs & Sync</button>
+        <div id="role-pins-status" class="muted small" style="margin-top:6px;"></div>
       </div>
 
       <div class="card">
