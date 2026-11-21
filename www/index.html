@@ -160,10 +160,80 @@
     <!-- 3. TOUR OPERATIONS (v0.2) -->
     <section id="view-ops" class="view">
       <div class="sub-tabs" id="ops-subtabs">
+        <button class="pill" data-ops="ops-trip-acc">Trip Accounts</button>
         <button class="pill active" data-ops="ops-ar">Clients (A/R)</button>
         <button class="pill" data-ops="ops-ap">Suppliers (A/P)</button>
         <button class="pill" data-ops="ops-float">Float & Partners</button>
         <button class="pill" data-ops="ops-close">Trip Close</button>
+      </div>
+
+      <!-- 3.0 TRIP ACCOUNTS (BUDGET, BREAK-EVEN & LIVE TRACKER) -->
+      <div id="ops-trip-acc" class="ops-panel">
+        <div class="card">
+          <h3>Trip Accounts & Budget</h3>
+          <select id="ta-pool-select"></select>
+        </div>
+
+        <!-- LIVE LEDGER TRACKER -->
+        <div class="card">
+          <h3>Live Trip Cash vs. Vendors</h3>
+          <div id="ta-live-summary"></div>
+          <div id="ta-live-vendors" style="margin-top:8px;"></div>
+        </div>
+
+        <!-- FIXED COSTS -->
+        <div class="card">
+          <div class="card-top">
+            <h3>Fixed Trip Costs</h3>
+            <strong id="ta-fixed-total">KSh 0</strong>
+          </div>
+          <div id="ta-fixed-list"></div>
+          <div class="add-row" style="margin-top:8px;">
+            <input type="text" id="ta-new-fix-name" placeholder="Add fixed cost (e.g., Drone / Security)" />
+            <input type="number" id="ta-new-fix-amt" placeholder="KSh" style="max-width:100px;" />
+            <button id="ta-add-fix-btn" class="btn-mini">+ Add</button>
+          </div>
+        </div>
+
+        <!-- PER-HEAD (VARIABLE) COSTS -->
+        <div class="card">
+          <div class="card-top">
+            <h3>Per-Head Costs (Variable)</h3>
+            <strong id="ta-var-total">KSh 0 / pax</strong>
+          </div>
+          <div id="ta-var-list"></div>
+          <div class="add-row" style="margin-top:8px;">
+            <input type="text" id="ta-new-var-name" placeholder="Add per-head cost (e.g., Lunch / Water)" />
+            <input type="number" id="ta-new-var-amt" placeholder="KSh" style="max-width:100px;" />
+            <button id="ta-add-var-btn" class="btn-mini">+ Add</button>
+          </div>
+        </div>
+
+        <!-- BREAK-EVEN & PROFIT SIMULATOR -->
+        <div class="card">
+          <h3>Break-Even & Profit Calculator</h3>
+          <div class="form-row">
+            <div style="flex:1">
+              <label class="field-label">Break-Even Paying Pax</label>
+              <input type="number" id="ta-be-pax" value="18" />
+            </div>
+            <div style="flex:1">
+              <label class="field-label">Non-Paying Staff</label>
+              <input type="number" id="ta-staff-pax" value="4" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1">
+              <label class="field-label">Max Bus Capacity</label>
+              <input type="number" id="ta-max-cap" value="26" />
+            </div>
+            <div style="flex:1">
+              <label class="field-label">Chosen Ticket Price (KSh)</label>
+              <input type="number" id="ta-ticket-price" value="3000" />
+            </div>
+          </div>
+          <div id="ta-pricing-results" class="journal-preview" style="margin-top:8px;"></div>
+        </div>
       </div>
 
       <!-- 3A. CLIENTS A/R -->
