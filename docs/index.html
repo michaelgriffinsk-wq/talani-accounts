@@ -2,111 +2,567 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Talani Accounts — Observer Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Talani Adventures — Team Portal</title>
   <style>
-    :root { --bg:#0b1120; --surface:#131c31; --border:#2b3a55; --text:#f8fafc; --muted:#94a3b8; --accent:#10b981; --gold:#f59e0b; --blue:#38bdf8; }
-    * { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-    body { background:var(--bg); color:var(--text); padding:16px; max-width:720px; margin:0 auto; }
-    .hidden { display:none !important; }
-    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; }
-    .hero { border-color:rgba(16,185,129,0.45); background:linear-gradient(145deg,#131c31,#0f2420); }
-    .amt { font-size:1.8rem; font-weight:800; color:var(--accent); margin:4px 0 10px; }
-    .muted { color:var(--muted); font-size:0.82rem; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-    .box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; font-size:0.78rem; }
-    .box strong { display:block; font-size:0.96rem; margin-top:3px; }
-    .row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); font-size:0.84rem; }
-    .row:last-child { border-bottom:none; }
-    input { width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin:10px 0; font-size:0.9rem; }
-    button { width:100%; padding:10px; border-radius:10px; border:none; background:var(--accent); color:#0b1120; font-weight:700; font-size:0.9rem; cursor:pointer; }
-    .badge { font-size:0.72rem; background:rgba(56,189,248,0.16); color:var(--blue); padding:3px 8px; border-radius:8px; font-weight:700; }
-    .je { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:9px; margin-bottom:8px; font-size:0.78rem; }
-    .dr { color:var(--blue); display:flex; justify-content:space-between; }
-    .cr { color:var(--gold); display:flex; justify-content:space-between; padding-left:12px; }
+    :root {
+      --bg: #0b1120;
+      --surface: #131c31;
+      --surface-2: #0f172a;
+      --border: #26354d;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --gold: #f59e0b;
+      --danger: #f87171;
+      --blue: #38bdf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 14px 14px 40px; max-width: 760px; margin: 0 auto; }
+    .hidden { display: none !important; }
+
+    /* Header */
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
+    .topbar h1 { font-size: 1.12rem; letter-spacing: -0.2px; }
+    .muted { color: var(--muted); font-size: 0.8rem; }
+    .small { font-size: 0.75rem; }
+
+    /* Cards & Layout */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+    .card h3 { font-size: 0.92rem; margin-bottom: 8px; }
+    .hero { border-color: rgba(16, 185, 129, 0.45); background: linear-gradient(145deg, #131c31, #0d2320); }
+    .hero-amt { font-size: 1.85rem; font-weight: 800; color: var(--accent); margin: 4px 0 12px; }
+    .split { display: flex; justify-content: space-between; gap: 10px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px; text-align: center; }
+    .stat-box strong { display: block; font-size: 0.92rem; margin-top: 2px; }
+
+    /* Tabs & Pills */
+    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+    .tab-btn {
+      background: var(--surface); color: var(--muted); border: 1px solid var(--border);
+      padding: 9px 4px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+    }
+    .tab-btn.active { background: var(--accent); color: #062118; border-color: var(--accent); }
+    .pills { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+    .pill {
+      background: var(--surface-2); color: var(--muted); border: 1px solid var(--border);
+      padding: 6px 11px; border-radius: 20px; font-size: 0.76rem; font-weight: 600; cursor: pointer;
+    }
+    .pill.active { background: rgba(56, 189, 248, 0.18); color: var(--blue); border-color: var(--blue); }
+
+    /* Forms & Buttons */
+    input, select {
+      width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text); font-size: 0.88rem; margin: 6px 0;
+    }
+    .btn {
+      width: 100%; padding: 10px 12px; border-radius: 10px; border: none;
+      background: var(--accent); color: #062118; font-weight: 700; font-size: 0.86rem; cursor: pointer;
+    }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-mini {
+      padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text); font-size: 0.74rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-mini.ok { background: rgba(16, 185, 129, 0.16); color: var(--accent); border-color: rgba(16, 185, 129, 0.4); }
+    .btn-mini.blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); border-color: rgba(56, 189, 248, 0.4); }
+
+    /* Badges & Rows */
+    .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 8px; font-weight: 700; display: inline-block; }
+    .badge.ok { background: rgba(16, 185, 129, 0.16); color: var(--accent); }
+    .badge.warn { background: rgba(245, 158, 11, 0.18); color: var(--gold); }
+    .badge.blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); }
+    .badge.err { background: rgba(248, 113, 113, 0.18); color: var(--danger); }
+
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.84rem; }
+    .row:last-child { border-bottom: none; }
+
+    /* Progress Meter */
+    .meter-wrap { margin-top: 8px; }
+    .meter-bar { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); margin-top: 4px; }
+    .meter-fill { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
+
+    /* Manifest Rows */
+    .pax-row {
+      display: flex; align-items: center; gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid var(--border); font-size: 0.84rem;
+    }
+    .pax-row:last-child { border-bottom: none; }
+    .pax-check { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; margin: 0; flex-shrink: 0; }
+    .pax-serial {
+      font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.74rem; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--border); padding: 3px 6px; border-radius: 6px; color: var(--blue);
+    }
+    .pax-boarded { opacity: 0.65; }
+    .pax-boarded .pax-name { text-decoration: line-through; }
+
+    /* Activity Feed */
+    .feed-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .feed-item:last-child { border-bottom: none; }
+    .amt-in { color: var(--accent); font-weight: 700; white-space: nowrap; }
+    .amt-out { color: var(--danger); font-weight: 700; white-space: nowrap; }
+
+    /* Print Styles (Clean Passenger Sheet) */
+    @media print {
+      body { background: #fff; color: #000; padding: 0; max-width: 100%; }
+      .no-print, .tabs, .pills, .btn-row, .btn-mini, #pin-card, #tab-overview, #tab-followups, #tab-activity { display: none !important; }
+      #tab-manifests { display: block !important; }
+      .card, .stat-box { background: #fff; border: 1px solid #ccc; color: #000; break-inside: avoid; }
+      .muted { color: #444; }
+      .badge { border: 1px solid #999; color: #000; background: #eee; }
+      .pax-serial { color: #000; background: #eee; border-color: #999; }
+      select { border: none; background: transparent; color: #000; font-weight: 700; font-size: 1.1rem; padding: 0; }
+    }
   </style>
 </head>
 <body>
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+  <div class="topbar">
     <div>
-      <h1 style="font-size:1.15rem;">Talani Adventures Accounts</h1>
-      <div class="muted" id="obs-updated">Encrypted Read-Only Observer</div>
+      <h1>Talani Adventures</h1>
+      <div class="muted" id="obs-updated">Team Operations & Finance Portal</div>
     </div>
-    <span class="badge">READ-ONLY</span>
+    <span class="badge blue no-print">READ-ONLY</span>
   </div>
 
+  <!-- PIN UNLOCK -->
   <div id="pin-card" class="card">
-    <h2 style="font-size:1rem;">Enter Team PIN</h2>
-    <p class="muted" style="margin-top:4px;">Decrypts the latest synced ledger locally in your browser.</p>
+    <h3>Enter Team PIN</h3>
+    <p class="muted" style="margin-bottom:8px;">Unlocks the latest synced cash, trip scorecards, and passenger manifests locally on your phone.</p>
     <input type="password" id="obs-pin" placeholder="Team PIN" />
-    <button id="unlock-btn">Unlock Accounts</button>
-    <div id="obs-err" class="muted" style="color:#fca5a5; margin-top:8px;"></div>
+    <button id="unlock-btn" class="btn">Unlock Portal</button>
+    <div id="obs-err" class="muted" style="color:var(--danger); margin-top:8px;"></div>
   </div>
 
+  <!-- MAIN PORTAL -->
   <div id="portal-body" class="hidden">
-    <div class="card hero">
-      <div class="muted">Free Operating Cash</div>
-      <div class="amt" id="obs-free">KSh 0</div>
-      <div class="row" style="border:none; padding-top:6px;">
-        <div><span class="muted">Total Cash</span><br><strong id="obs-total">KSh 0</strong></div>
-        <div><span class="muted">Restricted Cash</span><br><strong style="color:var(--gold)" id="obs-restricted">KSh 0</strong></div>
+    <nav class="tabs no-print">
+      <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+      <button class="tab-btn" data-tab="tab-manifests">Manifests</button>
+      <button class="tab-btn" data-tab="tab-followups">Follow-Ups</button>
+      <button class="tab-btn" data-tab="tab-activity">Activity</button>
+    </nav>
+
+    <!-- 1. OVERVIEW TAB -->
+    <section id="tab-overview" class="tab-panel">
+      <div class="card hero">
+        <div class="muted">Safe to Spend (Free Operating Cash)</div>
+        <div class="hero-amt" id="obs-free">KSh 0</div>
+        <div class="split">
+          <div><span class="muted">Total Cash on Hand</span><br><strong id="obs-total">KSh 0</strong></div>
+          <div style="text-align:right;"><span class="muted">Spoken For (Deposits + Bills)</span><br><strong style="color:var(--gold)" id="obs-restricted">KSh 0</strong></div>
+        </div>
       </div>
-    </div>
 
-    <div class="grid">
-      <div class="box"><span class="muted">Open Client A/R</span><strong id="obs-ar">KSh 0</strong></div>
-      <div class="box"><span class="muted">Unpaid Supplier A/P</span><strong style="color:var(--gold)" id="obs-ap">KSh 0</strong></div>
-      <div class="box"><span class="muted">Active Trail Floats</span><strong id="obs-float">KSh 0</strong></div>
-      <div class="box"><span class="muted">Partner Reimb. Owed</span><strong id="obs-reimb">KSh 0</strong></div>
-    </div>
+      <div id="obs-scorecards"></div>
 
-    <div class="card">
-      <h3 style="font-size:0.92rem; margin-bottom:6px;">Subsidiaries</h3>
-      <div id="obs-entities"></div>
-    </div>
+      <div class="card">
+        <h3>Brands & Subsidiaries</h3>
+        <div id="obs-entities"></div>
+      </div>
+    </section>
 
-    <div class="card">
-      <h3 style="font-size:0.92rem; margin-bottom:6px;">Trip & Project Pools</h3>
-      <div id="obs-pools"></div>
-    </div>
+    <!-- 2. MANIFESTS TAB -->
+    <section id="tab-manifests" class="tab-panel hidden">
+      <div class="card">
+        <div class="split" style="align-items:center;">
+          <h3 style="margin:0;">Trip Passenger Manifest</h3>
+          <button id="print-manifest-btn" class="btn-mini no-print">🖨 Print / PDF</button>
+        </div>
+        <select id="man-pool-select"></select>
 
-    <div class="card">
-      <h3 style="font-size:0.92rem; margin-bottom:8px;">Recent Audit Trail (Immutable)</h3>
-      <div id="obs-ledger"></div>
-    </div>
+        <div class="grid-3" id="man-summary" style="margin-top:8px;"></div>
+
+        <div class="pills no-print" id="man-filters">
+          <button class="pill active" data-filter="ALL">All Pax</button>
+          <button class="pill" data-filter="PAID">Fully Paid</button>
+          <button class="pill" data-filter="OWING">Still Owing</button>
+        </div>
+
+        <div class="btn-row no-print">
+          <button id="copy-gate-btn" class="btn-mini blue">📋 Copy Driver / KFS List</button>
+          <button id="copy-team-btn" class="btn-mini ok">📋 Copy Team List (With Balances)</button>
+        </div>
+        <div id="man-copy-status" class="muted small no-print" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="split" style="margin-bottom:6px;">
+          <span class="muted small">Tap checkbox to mark boarded on trip morning</span>
+          <span class="muted small" id="man-boarded-count">0 boarded</span>
+        </div>
+        <div id="man-list"></div>
+      </div>
+    </section>
+
+    <!-- 3. FOLLOW-UPS TAB -->
+    <section id="tab-followups" class="tab-panel hidden">
+      <div class="card">
+        <div class="split" style="align-items:center; margin-bottom:6px;">
+          <h3 style="margin:0;">Clients Still Owing</h3>
+          <strong style="color:var(--gold)" id="fu-ar-total">KSh 0</strong>
+        </div>
+        <div id="fu-ar-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="split" style="align-items:center; margin-bottom:6px;">
+          <h3 style="margin:0;">Unpaid Supplier Bills</h3>
+          <strong style="color:var(--danger)" id="fu-ap-total">KSh 0</strong>
+        </div>
+        <div id="fu-ap-list"></div>
+      </div>
+
+      <div class="card">
+        <h3>Owed to Team & Open Trail Floats</h3>
+        <div id="fu-team-list"></div>
+      </div>
+    </section>
+
+    <!-- 4. ACTIVITY TAB -->
+    <section id="tab-activity" class="tab-panel hidden">
+      <div class="card">
+        <h3>Plain-English Cash Activity</h3>
+        <div class="split">
+          <select id="act-entity-filter"></select>
+          <select id="act-pool-filter"></select>
+        </div>
+        <div id="act-feed" style="margin-top:6px;"></div>
+      </div>
+    </section>
   </div>
 
   <script>
-    const CASH = ["1010","1020","1030"];
-    const RESTRICTED = ["2010","2020","2030","2040","2050"];
-    const CR_NORMAL = ["2010","2020","2030","2040","2050","2100","3010","3020","3025","4010","4020","4030","4040"];
-    const fmt = (n) => "KSh " + Number(n||0).toLocaleString("en-KE",{maximumFractionDigits:2});
-    const esc = (s) => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    const b64ToBuf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const CASH = ["1010", "1020", "1030"];
+    const RESTRICTED = ["2010", "2020", "2030", "2040", "2050"];
+    const CR_NORMAL = ["2010", "2020", "2030", "2040", "2050", "2100", "3010", "3020", "3025", "4010", "4020", "4030", "4040"];
+    const BOARD_KEY = "talani_manifest_boarded_v1";
+
+    const fmt = (n) => "KSh " + Number(n || 0).toLocaleString("en-KE", { maximumFractionDigits: 2 });
+    const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const b64ToBuf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+    let portalData = null;
+    let manFilter = "ALL";
+    let boardedMap = (() => {
+      try { return JSON.parse(localStorage.getItem(BOARD_KEY) || "{}"); }
+      catch { return {}; }
+    })();
 
     async function decrypt(pkg, pin) {
       const enc = new TextEncoder();
       const keyMat = await crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]);
       const key = await crypto.subtle.deriveKey(
-        { name:"PBKDF2", salt:b64ToBuf(pkg.salt), iterations:100000, hash:"SHA-256" },
-        keyMat, { name:"AES-GCM", length:256 }, false, ["decrypt"]
+        { name: "PBKDF2", salt: b64ToBuf(pkg.salt), iterations: 100000, hash: "SHA-256" },
+        keyMat, { name: "AES-GCM", length: 256 }, false, ["decrypt"]
       );
-      const plain = await crypto.subtle.decrypt({ name:"AES-GCM", iv:b64ToBuf(pkg.iv) }, key, b64ToBuf(pkg.ct));
+      const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64ToBuf(pkg.iv) }, key, b64ToBuf(pkg.ct));
       return JSON.parse(new TextDecoder().decode(plain));
     }
 
     function calc(entries) {
       const b = {};
-      for (const je of entries) {
+      for (const je of entries || []) {
         for (const l of je.lines || []) {
           const isCr = CR_NORMAL.includes(l.accountCode);
-          b[l.accountCode] = (b[l.accountCode]||0) + (isCr ? (l.credit - l.debit) : (l.debit - l.credit));
+          b[l.accountCode] = (b[l.accountCode] || 0) + (isCr ? (l.credit - l.debit) : (l.debit - l.credit));
         }
       }
       return b;
     }
 
-    document.getElementById("unlock-btn").addEventListener("click", async () => {
+    function tripCode(name) {
+      return (name || "TRP").replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase() || "TRP";
+    }
+
+    async function copyText(txt, statusEl, label) {
+      try {
+        await navigator.clipboard.writeText(txt);
+        if (statusEl) statusEl.textContent = "✓ " + label;
+      } catch {
+        prompt("Copy text below:", txt);
+      }
+    }
+
+    // ================= RENDERERS =================
+    function renderOverview() {
+      const bal = calc(portalData.entries);
+      const totalCash = CASH.reduce((s, c) => s + (bal[c] || 0), 0);
+      const restricted = RESTRICTED.reduce((s, c) => s + Math.max(0, bal[c] || 0), 0);
+      document.getElementById("obs-total").textContent = fmt(totalCash);
+      document.getElementById("obs-restricted").textContent = fmt(restricted);
+      document.getElementById("obs-free").textContent = fmt(totalCash - restricted);
+
+      // Trip Scorecards with Break-Even Coverage Meter
+      const pools = portalData.pools || [];
+      document.getElementById("obs-scorecards").innerHTML = pools.map((p) => {
+        const pb = calc((portalData.entries || []).filter((e) => e.poolId === p.id));
+        const collected = (pb["2010"] || 0) + (pb["4010"] || 0) + (pb["4020"] || 0) + (pb["4040"] || 0);
+        const totalCosts = (pb["5100"] || 0) + (pb["5200"] || 0) + (pb["6100"] || 0) + (pb["6120"] || 0);
+        const arOwed = (portalData.bookings || [])
+          .filter((b) => b.poolId === p.id && b.status === "ACTIVE")
+          .reduce((s, b) => s + Math.max(0, b.ticketPrice - (b.discount || 0) - (b.paid || 0)), 0);
+        const apOwed = (portalData.payables || [])
+          .filter((x) => x.poolId === p.id && x.status === "OPEN")
+          .reduce((s, x) => s + Math.max(0, x.totalAmount - (x.paidAmount || 0)), 0);
+        const net = collected - totalCosts;
+        const pct = totalCosts > 0 ? Math.min(100, Math.round((collected / totalCosts) * 100)) : (collected > 0 ? 100 : 0);
+        const fillCol = pct >= 100 ? "var(--accent)" : (pct >= 60 ? "var(--gold)" : "var(--danger)");
+
+        return `
+        <div class="card">
+          <div class="split" style="align-items:center; margin-bottom:8px;">
+            <strong>${esc(p.name)}</strong>
+            <span class="badge ${p.status === "CLOSED" ? "blue" : "ok"}">${p.status === "CLOSED" ? "🔒 CLOSED" : "ACTIVE"}</span>
+          </div>
+          <div class="row"><span>Collected So Far</span><strong style="color:var(--accent)">${fmt(collected)}</strong></div>
+          <div class="row"><span>Still Owed by Clients</span><strong style="color:var(--gold)">${fmt(arOwed)}</strong></div>
+          <div class="row"><span>Total Trip Costs Logged</span><strong>${fmt(totalCosts)}</strong></div>
+          <div class="row"><span>Unpaid Vendor Bills</span><strong style="color:var(--danger)">${fmt(apOwed)}</strong></div>
+          <div class="row"><span>Current Net Position</span><strong style="color:${net >= 0 ? "var(--accent)" : "var(--danger)"}">${fmt(net)}</strong></div>
+          <div class="meter-wrap">
+            <div class="split small muted">
+              <span>Break-Even Cost Coverage</span>
+              <strong>${pct}% ${pct >= 100 ? "✓ Covered" : ""}</strong>
+            </div>
+            <div class="meter-bar"><div class="meter-fill" style="width:${pct}%; background:${fillCol};"></div></div>
+          </div>
+        </div>`;
+      }).join("");
+
+      // Subsidiaries
+      document.getElementById("obs-entities").innerHTML = (portalData.entities || []).map((e) => {
+        const eb = calc((portalData.entries || []).filter((x) => x.entityId === e.id));
+        const c = CASH.reduce((s, k) => s + (eb[k] || 0), 0);
+        return `<div class="row"><strong>${esc(e.name)}</strong><span>Cash: ${fmt(c)} • Deposits: ${fmt(eb["2010"] || 0)}</span></div>`;
+      }).join("");
+    }
+
+    function getManifestPax(poolId) {
+      const pool = (portalData.pools || []).find((p) => p.id === poolId);
+      const prefix = tripCode(pool?.name);
+      return (portalData.bookings || [])
+        .filter((b) => b.poolId === poolId && (b.status === "ACTIVE" || b.status === "EARNED"))
+        .slice()
+        .reverse()
+        .map((b, idx) => {
+          const netPrice = b.ticketPrice - (b.discount || 0);
+          const owed = Math.max(0, netPrice - (b.paid || 0));
+          return {
+            ...b,
+            serial: `${prefix}-${String(idx + 1).padStart(2, "0")}`,
+            netPrice,
+            owed
+          };
+        });
+    }
+
+    function renderManifest() {
+      const poolId = document.getElementById("man-pool-select").value;
+      const allPax = getManifestPax(poolId);
+      const totalCollected = allPax.reduce((s, p) => s + (p.paid || 0), 0);
+      const totalOwed = allPax.reduce((s, p) => s + p.owed, 0);
+
+      document.getElementById("man-summary").innerHTML = `
+        <div class="stat-box"><span class="muted small">Booked Pax</span><strong>${allPax.length}</strong></div>
+        <div class="stat-box"><span class="muted small">Collected</span><strong style="color:var(--accent)">${fmt(totalCollected)}</strong></div>
+        <div class="stat-box"><span class="muted small">Still Owed</span><strong style="color:var(--gold)">${fmt(totalOwed)}</strong></div>`;
+
+      const filtered = allPax.filter((p) => {
+        if (manFilter === "PAID") return p.owed <= 0;
+        if (manFilter === "OWING") return p.owed > 0;
+        return true;
+      });
+
+      const boardedCount = allPax.filter((p) => boardedMap[p.id]).length;
+      document.getElementById("man-boarded-count").textContent = `${boardedCount} / ${allPax.length} boarded`;
+
+      document.getElementById("man-list").innerHTML = filtered.map((p) => {
+        const isBoarded = !!boardedMap[p.id];
+        return `
+        <div class="pax-row ${isBoarded ? "pax-boarded" : ""}">
+          <input type="checkbox" class="pax-check no-print" data-id="${p.id}" ${isBoarded ? "checked" : ""} />
+          <span class="pax-serial">${p.serial}</span>
+          <div style="flex:1;">
+            <strong class="pax-name">${esc(p.clientName)}</strong>
+            <div class="muted small">Paid ${fmt(p.paid)} of ${fmt(p.netPrice)}</div>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge ${p.owed <= 0 ? "ok" : "warn"}">${p.owed <= 0 ? "PAID" : "OWES " + fmt(p.owed)}</span>
+            ${p.owed > 0 ? `<div style="margin-top:4px;"><button class="btn-mini remind-btn no-print" data-name="${esc(p.clientName)}" data-owed="${p.owed}">Remind</button></div>` : ""}
+          </div>
+        </div>`;
+      }).join("") || `<div class="muted">No clients match this filter for the selected trip.</div>`;
+
+      document.querySelectorAll(".pax-check").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          boardedMap[cb.dataset.id] = cb.checked;
+          localStorage.setItem(BOARD_KEY, JSON.stringify(boardedMap));
+          renderManifest();
+        });
+      });
+
+      document.querySelectorAll("#man-list .remind-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const msg = `Hi ${btn.dataset.name}, friendly reminder that your remaining balance for the upcoming Talani trip is KSh ${Number(btn.dataset.owed).toLocaleString()}.`;
+          copyText(msg, document.getElementById("man-copy-status"), `Copied reminder for ${btn.dataset.name}`);
+          btn.textContent = "✓ Copied";
+        });
+      });
+    }
+
+    function renderFollowUps() {
+      const unpaidAR = (portalData.bookings || [])
+        .filter((b) => b.status === "ACTIVE")
+        .map((b) => ({ ...b, owed: Math.max(0, b.ticketPrice - (b.discount || 0) - (b.paid || 0)) }))
+        .filter((b) => b.owed > 0);
+
+      document.getElementById("fu-ar-total").textContent = fmt(unpaidAR.reduce((s, b) => s + b.owed, 0));
+      document.getElementById("fu-ar-list").innerHTML = unpaidAR.map((b) => {
+        const pool = (portalData.pools || []).find((p) => p.id === b.poolId)?.name || "";
+        return `
+        <div class="row">
+          <div>
+            <strong>${esc(b.clientName)}</strong>
+            <div class="muted small">${esc(pool)} • Paid ${fmt(b.paid)}</div>
+          </div>
+          <div style="text-align:right;">
+            <strong style="color:var(--gold)">${fmt(b.owed)}</strong><br/>
+            <button class="btn-mini fu-rem-btn" data-name="${esc(b.clientName)}" data-owed="${b.owed}">Remind</button>
+          </div>
+        </div>`;
+      }).join("") || `<div class="muted">✓ No unpaid client balances.</div>`;
+
+      document.querySelectorAll(".fu-rem-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const msg = `Hi ${btn.dataset.name}, friendly reminder that your remaining balance for the upcoming Talani trip is KSh ${Number(btn.dataset.owed).toLocaleString()}.`;
+          copyText(msg);
+          btn.textContent = "✓ Copied";
+        });
+      });
+
+      const openAP = (portalData.payables || []).filter((p) => p.status === "OPEN");
+      document.getElementById("fu-ap-total").textContent = fmt(openAP.reduce((s, p) => s + Math.max(0, p.totalAmount - (p.paidAmount || 0)), 0));
+      document.getElementById("fu-ap-list").innerHTML = openAP.map((p) => {
+        const pool = (portalData.pools || []).find((x) => x.id === p.poolId)?.name || "";
+        const due = Math.max(0, p.totalAmount - (p.paidAmount || 0));
+        return `
+        <div class="row">
+          <div><strong>${esc(p.vendor)}</strong><div class="muted small">${esc(pool)} • Due ${p.dueDate || "TBD"}</div></div>
+          <strong style="color:var(--danger)">${fmt(due)}</strong>
+        </div>`;
+      }).join("") || `<div class="muted">✓ No unpaid supplier bills.</div>`;
+
+      const openReimb = (portalData.reimbursements || []).filter((r) => r.status === "OPEN");
+      const openFloats = (portalData.floats || []).filter((f) => f.status === "OPEN");
+      const teamRows = [
+        ...openReimb.map((r) => `
+          <div class="row">
+            <div><strong>Reimburse: ${esc(r.partnerName)}</strong><div class="muted small">${esc(r.memo)}</div></div>
+            <strong style="color:var(--gold)">${fmt(r.amount)}</strong>
+          </div>`),
+        ...openFloats.map((f) => {
+          const rem = Math.max(0, f.issued - (f.spent || 0) - (f.returned || 0));
+          return `
+          <div class="row">
+            <div><strong>Trail Float: ${esc(f.holder)}</strong><div class="muted small">Issued ${fmt(f.issued)} • Unaccounted cash</div></div>
+            <strong style="color:var(--blue)">${fmt(rem)}</strong>
+          </div>`;
+        })
+      ];
+      document.getElementById("fu-team-list").innerHTML = teamRows.join("") || `<div class="muted">✓ No open reimbursements or trail floats.</div>`;
+    }
+
+    function renderActivity() {
+      const entF = document.getElementById("act-entity-filter").value || "all";
+      const poolF = document.getElementById("act-pool-filter").value || "all";
+
+      const cashEvents = (portalData.entries || [])
+        .filter((je) => {
+          if (entF !== "all" && je.entityId !== entF) return false;
+          if (poolF !== "all" && je.poolId !== poolF) return false;
+          return (je.lines || []).some((l) => CASH.includes(l.accountCode));
+        })
+        .slice(0, 60);
+
+      document.getElementById("act-feed").innerHTML = cashEvents.map((je) => {
+        const netCash = (je.lines || [])
+          .filter((l) => CASH.includes(l.accountCode))
+          .reduce((s, l) => s + (l.debit || 0) - (l.credit || 0), 0);
+        if (Math.abs(netCash) < 0.01) return "";
+        const pool = (portalData.pools || []).find((p) => p.id === je.poolId)?.name || "";
+        const isIn = netCash > 0;
+        return `
+        <div class="feed-item">
+          <div>
+            <strong>${esc(je.memo)}</strong>
+            <div class="muted small">${esc(pool)} • ${je.date}${je.mpesaCode ? " • " + esc(je.mpesaCode) : ""}</div>
+          </div>
+          <span class="${isIn ? "amt-in" : "amt-out"}">${isIn ? "+ " : "− "}${fmt(Math.abs(netCash))}</span>
+        </div>`;
+      }).join("") || `<div class="muted">No cash activity matches this filter.</div>`;
+    }
+
+    function initPortalUI() {
+      const pools = portalData.pools || [];
+      const ents = portalData.entities || [];
+
+      document.getElementById("man-pool-select").innerHTML = pools
+        .map((p) => `<option value="${p.id}">${esc(p.name)}${p.status === "CLOSED" ? " [CLOSED]" : ""}</option>`)
+        .join("");
+
+      document.getElementById("act-entity-filter").innerHTML = `<option value="all">All Brands</option>` + ents.map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
+      document.getElementById("act-pool-filter").innerHTML = `<option value="all">All Trips</option>` + pools.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+
+      renderOverview();
+      renderManifest();
+      renderFollowUps();
+      renderActivity();
+    }
+
+    // ================= EVENTS =================
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.remove("hidden");
+      });
+    });
+
+    document.querySelectorAll("#man-filters .pill").forEach((p) => {
+      p.addEventListener("click", () => {
+        document.querySelectorAll("#man-filters .pill").forEach((x) => x.classList.remove("active"));
+        p.classList.add("active");
+        manFilter = p.dataset.filter;
+        renderManifest();
+      });
+    });
+
+    document.getElementById("man-pool-select").addEventListener("change", renderManifest);
+    document.getElementById("act-entity-filter").addEventListener("change", renderActivity);
+    document.getElementById("act-pool-filter").addEventListener("change", renderActivity);
+    document.getElementById("print-manifest-btn").addEventListener("click", () => window.print());
+
+    document.getElementById("copy-gate-btn").addEventListener("click", () => {
+      const poolId = document.getElementById("man-pool-select").value;
+      const poolName = (portalData.pools || []).find((p) => p.id === poolId)?.name || "Trip";
+      const pax = getManifestPax(poolId);
+      const text = `*${poolName} — Passenger Manifest (${pax.length} Pax)*\n` +
+        pax.map((p) => `${p.serial} | ${p.clientName}`).join("\n");
+      copyText(text, document.getElementById("man-copy-status"), "Copied Driver / KFS list (no money shown).");
+    });
+
+    document.getElementById("copy-team-btn").addEventListener("click", () => {
+      const poolId = document.getElementById("man-pool-select").value;
+      const poolName = (portalData.pools || []).find((p) => p.id === poolId)?.name || "Trip";
+      const pax = getManifestPax(poolId);
+      const text = `*${poolName} — Team Manifest (${pax.length} Pax)*\n` +
+        pax.map((p) => `${p.serial} | ${p.clientName} — Paid ${fmt(p.paid)}${p.owed > 0 ? ` (Bal: ${fmt(p.owed)})` : " ✓ PAID"}`).join("\n");
+      copyText(text, document.getElementById("man-copy-status"), "Copied Internal Team list with balances.");
+    });
+
+    async function unlock() {
       const pin = document.getElementById("obs-pin").value.trim();
       const errEl = document.getElementById("obs-err");
       if (!pin) return;
@@ -115,59 +571,21 @@
         const res = await fetch("./ledger.enc.json?t=" + Date.now());
         if (!res.ok) throw new Error("No synced ledger found yet.");
         const pkg = await res.json();
-        const data = await decrypt(pkg, pin);
+        portalData = await decrypt(pkg, pin);
 
         document.getElementById("obs-updated").textContent = "Last synced: " + new Date(pkg.updatedAt).toLocaleString();
-        const bal = calc(data.entries);
-        const totalCash = CASH.reduce((s,c)=>s+(bal[c]||0), 0);
-        const restricted = RESTRICTED.reduce((s,c)=>s+Math.max(0, bal[c]||0), 0);
-        document.getElementById("obs-total").textContent = fmt(totalCash);
-        document.getElementById("obs-restricted").textContent = fmt(restricted);
-        document.getElementById("obs-free").textContent = fmt(totalCash - restricted);
-
-        const openAR = (data.bookings||[]).filter(b=>b.status==="ACTIVE").reduce((s,b)=>s+Math.max(0,b.ticketPrice-b.discount-b.paid),0);
-        const openAP = (data.payables||[]).filter(p=>p.status==="OPEN").reduce((s,p)=>s+Math.max(0,p.totalAmount-p.paidAmount),0);
-        const openFl = (data.floats||[]).filter(f=>f.status==="OPEN").reduce((s,f)=>s+Math.max(0,f.issued-f.spent-f.returned),0);
-        const openRe = (data.reimbursements||[]).filter(r=>r.status==="OPEN").reduce((s,r)=>s+Number(r.amount||0),0);
-
-        document.getElementById("obs-ar").textContent = fmt(openAR);
-        document.getElementById("obs-ap").textContent = fmt(openAP);
-        document.getElementById("obs-float").textContent = fmt(openFl);
-        document.getElementById("obs-reimb").textContent = fmt(openRe);
-
-        document.getElementById("obs-entities").innerHTML = data.entities.map(e => {
-          const b = calc(data.entries.filter(x => x.entityId === e.id));
-          const c = CASH.reduce((s,k)=>s+(b[k]||0), 0);
-          return `<div class="row"><strong>${esc(e.name)}</strong><span>Cash: ${fmt(c)} • Dep: ${fmt(b["2010"]||0)}</span></div>`;
-        }).join("");
-
-        document.getElementById("obs-pools").innerHTML = data.pools.map(p => {
-          const b = calc(data.entries.filter(x => x.poolId === p.id));
-          const inc = (b["2010"]||0) + (b["4010"]||0) + (b["4040"]||0);
-          const out = (b["5100"]||0) + (b["5200"]||0) + (b["6120"]||0);
-          return `<div class="row"><strong>${esc(p.name)} ${p.status==="CLOSED"?"🔒":""}</strong><span>In: ${fmt(inc)} • Out: ${fmt(out)}</span></div>`;
-        }).join("");
-
-        document.getElementById("obs-ledger").innerHTML = data.entries.slice(0, 40).map(je => `
-          <div class="je">
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-              <strong>${esc(je.memo)}</strong><span class="muted">${je.date} ${je.mpesaCode ? "• "+esc(je.mpesaCode) : ""}</span>
-            </div>
-            ${je.lines.map(l => l.debit > 0
-              ? `<div class="dr"><span>DR ${l.accountCode}</span><strong>${fmt(l.debit)}</strong></div>`
-              : `<div class="cr"><span>CR ${l.accountCode}</span><strong>${fmt(l.credit)}</strong></div>`
-            ).join("")}
-          </div>`).join("") || `<div class="muted">No entries posted yet.</div>`;
-
+        initPortalUI();
         document.getElementById("pin-card").classList.add("hidden");
         document.getElementById("portal-body").classList.remove("hidden");
       } catch (e) {
         errEl.textContent = e.message.includes("No synced") ? e.message : "Wrong PIN or corrupted snapshot.";
       }
+    }
+
+    document.getElementById("unlock-btn").addEventListener("click", unlock);
+    document.getElementById("obs-pin").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") unlock();
     });
   </script>
-
-  <script src="app.js"></script>
-  <script src="v3.js"></script>
 </body>
 </html>
