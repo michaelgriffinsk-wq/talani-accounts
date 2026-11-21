@@ -53,12 +53,12 @@
       </div>
     </section>
 
-    <!-- 2. AI M-PESA PARSER -->
+    <!-- 2. AI M-PESA & BANK PARSER -->
     <section id="view-ai" class="view">
       <div class="card">
-        <h2>✨ AI M-Pesa & Message Parser</h2>
-        <p class="muted">Paste any M-Pesa SMS. Gemini extracts the code, direction, principal, and fee, checks for duplicates, and drafts a balanced journal entry.</p>
-        <textarea id="mpesa-sms-input" rows="4" placeholder="Paste M-Pesa confirmation SMS here..."></textarea>
+        <h2>✨ AI M-Pesa & Bank Parser</h2>
+        <p class="muted">Paste any M-Pesa, Bank, or Pesalink SMS. Gemini extracts the code, direction, principal, and fee, checks for duplicates, and drafts a balanced journal entry.</p>
+        <textarea id="mpesa-sms-input" rows="4" placeholder="Paste M-Pesa, Bank, or Pesalink SMS here..."></textarea>
         <input type="text" id="mpesa-hint-input" placeholder="Optional note (e.g., Gatamaiyu bus deposit, Client deposit - Emily)" />
         <div class="form-row">
           <select id="mpesa-entity-select"></select>
@@ -83,7 +83,7 @@
 
         <div class="form-row">
           <div style="flex:1">
-            <label class="field-label">M-Pesa Code</label>
+            <label class="field-label">M-Pesa / Bank Ref</label>
             <input type="text" id="draft-code" />
           </div>
           <div style="flex:1">
@@ -133,6 +133,21 @@
           <label for="draft-etims" style="font-size:0.82rem;">Valid KRA eTIMS Receipt Verified</label>
         </div>
 
+        <div id="draft-ar-bridge" class="card hidden" style="margin:8px 0; padding:10px; border:1px solid var(--accent);">
+          <label class="field-label" style="color:var(--accent);">🔗 Link Deposit to Client A/R (Updates "Still Owed")</label>
+          <select id="draft-ar-mode">
+            <option value="none">Do not link to Client A/R</option>
+            <option value="new">+ Create New Client Booking</option>
+          </select>
+          <div id="draft-ar-new-fields" class="hidden" style="margin-top:6px;">
+            <input type="text" id="draft-ar-name" placeholder="Client Real Name (e.g., Jane Doe)" />
+            <div class="form-row">
+              <input type="number" id="draft-ar-price" placeholder="Full Ticket Price (e.g., 3000)" />
+              <input type="number" id="draft-ar-disc" placeholder="Discount (0)" value="0" />
+            </div>
+          </div>
+        </div>
+
         <div id="draft-preview-lines" class="journal-preview"></div>
 
         <div class="btn-row">
@@ -174,7 +189,7 @@
           </div>
           <button id="add-ar-btn" class="btn primary">Record Booking & Post Deposit</button>
         </div>
-                <button id="show-owed-btn" class="btn secondary" style="margin-bottom:10px;">💰 Show What Is Still Owed</button>
+        <button id="show-owed-btn" class="btn secondary" style="margin-bottom:10px;">💰 Show What Is Still Owed</button>
         <div id="ar-owed-box" class="card hidden"></div>
 
         <div id="ar-list"></div>
