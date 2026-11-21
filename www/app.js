@@ -779,10 +779,11 @@ document.getElementById("save-cfg-btn").addEventListener("click", () => {
   document.getElementById("cfg-status").textContent = "✓ Keys & Team PIN saved locally.";
 });
 
-document.getElementById("export-vault-btn").addEventListener("click", async () => {
+document.getElementById("export-vault-btn").addEventListener("click", () => {
   const json = JSON.stringify(ledger, null, 2);
   const filename = `talani-accounts-vault-${todayStr()}.json`;
-  const status = document.getElementById("vault-status");
+  window.nativeExportFile(filename, json, document.getElementById("vault-status"));
+});
 
   // 1. Copy to clipboard as an instant fallback
   try { await navigator.clipboard.writeText(json); } catch {}
