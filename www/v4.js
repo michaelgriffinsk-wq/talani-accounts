@@ -184,30 +184,39 @@ Return ONLY raw JSON:
   }
 
   // ================= 4. CPA CSV EXPORTS (Android Share + Desktop Download) =================
+    window.nativeExportFile = async function (filename, content, statusEl) {
+    try { await navigator.clipboard.writeText(content); } catch {}
+
+    const { Filesystem, Share } = window.Capacitor?.Plugins || {};
+    if (Filesystem) {
+      try {
+        const saved = await Filesystem.writeFile({
+          path: filename,
+          data: content,
+          directory: "DOCUMENTS",
+          encoding: "utf8"
+        });
+        if (statusEl) statusEl.textContent = `✓ Saved to Documents/${filename}`;
+        if (Share) {
+          await Share.share({ title: filename, url: saved.uri });
+        }
+        return;
+      } catch (err) {
+        if (statusEl) statusEl.textContent = "Export error: " + err.message;
+        return;
+      }
+    }
+    if (statusEl) statusEl.textContent = "✓ Copied to clipboard (paste into a .json or .csv file).";
+  };
+
   async function downloadCSV(filename, rows) {
     const csv = rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
     const statusEl = document.getElementById("cpa-exp-status");
-
-    try { await navigator.clipboard.writeText(csv); } catch {}
-
-    try {
-      const file = new File([csv], filename, { type: "text/csv" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ title: filename, files: [file] });
-        statusEl.textContent = `✓ Shared ${filename}`;
-        return;
-      }
-    } catch {}
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    statusEl.textContent = `✓ Exported ${filename} (also copied to clipboard).`;
+    return window.nativeExportFile(filename, csv, statusEl);
   }
+
+
+
 
   document.getElementById("exp-tb-btn")?.addEventListener("click", () => {
     const b = computeBalances();
