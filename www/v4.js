@@ -323,4 +323,52 @@ Return ONLY raw JSON:
     renderV4();
   };
   renderV4();
+    // ================= 6. SHOW UNPAID CLIENT BALANCES =================
+  document.getElementById("show-owed-btn")?.addEventListener("click", () => {
+    const box = document.getElementById("ar-owed-box");
+    if (!box) return;
+    box.classList.toggle("hidden");
+    if (box.classList.contains("hidden")) return;
+
+    const unpaid = (ledger.bookings || [])
+      .filter((b) => b.status === "ACTIVE")
+      .map((b) => ({
+        ...b,
+        netPrice: b.ticketPrice - (b.discount || 0),
+        owed: Math.max(0, b.ticketPrice - (b.discount || 0) - (b.paid || 0))
+      }))
+      .filter((b) => b.owed > 0);
+
+    if (!unpaid.length) {
+      box.innerHTML = `<div class="muted">✓ All active client bookings are fully paid.</div>`;
+      return;
+    }
+
+    const totalOwed = unpaid.reduce((s, b) => s + b.owed, 0);
+    box.innerHTML = `
+      <div class="card-top">
+        <h3>Still Owed (${unpaid.length} Clients)</h3>
+        <strong class="warn-text">${fmtKES(totalOwed)}</strong>
+      </div>
+      ${unpaid.map((b) => `
+        <div class="list-row">
+          <div>
+            <strong>${esc(b.clientName)}</strong>
+            <div class="muted small">Paid ${fmtKES(b.paid)} of ${fmtKES(b.netPrice)}</div>
+          </div>
+          <div style="text-align:right;">
+            <strong class="warn-text">${fmtKES(b.owed)}</strong><br/>
+            <button class="btn-mini copy-rem-btn" data-name="${esc(b.clientName)}" data-owed="${b.owed}">Copy Reminder</button>
+          </div>
+        </div>
+      `).join("")}`;
+
+    box.querySelectorAll(".copy-rem-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const msg = `Hi ${btn.dataset.name}, friendly reminder that your remaining balance for the upcoming Talani trip is KSh ${Number(btn.dataset.owed).toLocaleString()}.`;
+        try { await navigator.clipboard.writeText(msg); } catch {}
+        btn.textContent = "✓ Copied";
+      });
+    });
+  });
 })();
