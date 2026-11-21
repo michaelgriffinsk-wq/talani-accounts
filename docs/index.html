@@ -18,14 +18,15 @@
       --blue: #38bdf8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 14px 14px 40px; max-width: 760px; margin: 0 auto; }
+    body { background: var(--bg); color: var(--text); padding: 14px 14px 44px; max-width: 760px; margin: 0 auto; }
     .hidden { display: none !important; }
 
     /* Header */
     .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 10px; }
     .topbar h1 { font-size: 1.12rem; letter-spacing: -0.2px; }
+    .topbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
     .muted { color: var(--muted); font-size: 0.8rem; }
-    .small { font-size: 0.75rem; }
+    .small { font-size: 0.74rem; }
 
     /* Cards & Layout */
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
@@ -33,15 +34,16 @@
     .hero { border-color: rgba(16, 185, 129, 0.45); background: linear-gradient(145deg, #131c31, #0d2320); }
     .hero-amt { font-size: 1.85rem; font-weight: 800; color: var(--accent); margin: 4px 0 12px; }
     .split { display: flex; justify-content: space-between; gap: 10px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
     .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
     .stat-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px; text-align: center; }
-    .stat-box strong { display: block; font-size: 0.92rem; margin-top: 2px; }
+    .stat-box strong { display: block; font-size: 0.9rem; margin-top: 2px; }
 
     /* Tabs & Pills */
-    .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+    .tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-bottom: 14px; }
     .tab-btn {
       background: var(--surface); color: var(--muted); border: 1px solid var(--border);
-      padding: 9px 4px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+      padding: 9px 2px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; cursor: pointer;
     }
     .tab-btn.active { background: var(--accent); color: #062118; border-color: var(--accent); }
     .pills { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
@@ -52,24 +54,30 @@
     .pill.active { background: rgba(56, 189, 248, 0.18); color: var(--blue); border-color: var(--blue); }
 
     /* Forms & Buttons */
-    input, select {
+    label.field-label { display: block; font-size: 0.73rem; color: var(--muted); margin-top: 6px; }
+    input, select, textarea {
       width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
-      background: var(--surface-2); color: var(--text); font-size: 0.88rem; margin: 6px 0;
+      background: var(--surface-2); color: var(--text); font-size: 0.86rem; margin: 4px 0 6px;
     }
+    .form-row { display: flex; gap: 8px; }
+    .form-row > * { flex: 1; }
     .btn {
       width: 100%; padding: 10px 12px; border-radius: 10px; border: none;
       background: var(--accent); color: #062118; font-weight: 700; font-size: 0.86rem; cursor: pointer;
     }
+    .btn.secondary { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
     .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .btn-mini {
       padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--surface-2); color: var(--text); font-size: 0.74rem; font-weight: 600; cursor: pointer;
+      background: var(--surface-2); color: var(--text); font-size: 0.73rem; font-weight: 600; cursor: pointer;
     }
     .btn-mini.ok { background: rgba(16, 185, 129, 0.16); color: var(--accent); border-color: rgba(16, 185, 129, 0.4); }
     .btn-mini.blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); border-color: rgba(56, 189, 248, 0.4); }
+    .btn-mini.warn { background: rgba(245, 158, 11, 0.16); color: var(--gold); border-color: rgba(245, 158, 11, 0.4); }
+    .btn-mini.danger { background: rgba(248, 113, 113, 0.16); color: var(--danger); border-color: rgba(248, 113, 113, 0.4); }
 
     /* Badges & Rows */
-    .badge { font-size: 0.7rem; padding: 3px 8px; border-radius: 8px; font-weight: 700; display: inline-block; }
+    .badge { font-size: 0.68rem; padding: 3px 8px; border-radius: 8px; font-weight: 700; display: inline-block; }
     .badge.ok { background: rgba(16, 185, 129, 0.16); color: var(--accent); }
     .badge.warn { background: rgba(245, 158, 11, 0.18); color: var(--gold); }
     .badge.blue { background: rgba(56, 189, 248, 0.16); color: var(--blue); }
@@ -97,16 +105,22 @@
     .pax-boarded { opacity: 0.65; }
     .pax-boarded .pax-name { text-decoration: line-through; }
 
-    /* Activity Feed */
+    /* Activity Feed & Request Cards */
     .feed-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
     .feed-item:last-child { border-bottom: none; }
     .amt-in { color: var(--accent); font-weight: 700; white-space: nowrap; }
     .amt-out { color: var(--danger); font-weight: 700; white-space: nowrap; }
 
+    .req-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 11px; margin-bottom: 8px; }
+    .req-meta { display: flex; gap: 5px; flex-wrap: wrap; margin: 6px 0; }
+    .tag { font-size: 0.69rem; padding: 2px 7px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+    .check-inline { display: flex; align-items: center; gap: 8px; margin: 6px 0 8px; font-size: 0.82rem; }
+    .check-inline input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+
     /* Print Styles (Clean Passenger Sheet) */
     @media print {
       body { background: #fff; color: #000; padding: 0; max-width: 100%; }
-      .no-print, .tabs, .pills, .btn-row, .btn-mini, #pin-card, #tab-overview, #tab-followups, #tab-activity { display: none !important; }
+      .no-print, .tabs, .pills, .btn-row, .btn-mini, #pin-card, #tab-overview, #tab-followups, #tab-activity, #tab-requests { display: none !important; }
       #tab-manifests { display: block !important; }
       .card, .stat-box { background: #fff; border: 1px solid #ccc; color: #000; break-inside: avoid; }
       .muted { color: #444; }
@@ -122,15 +136,18 @@
       <h1>Talani Adventures</h1>
       <div class="muted" id="obs-updated">Team Operations & Finance Portal</div>
     </div>
-    <span class="badge blue no-print">READ-ONLY</span>
+    <div class="topbar-right no-print">
+      <span id="access-mode-badge" class="badge blue">L1: READ-ONLY</span>
+      <button id="header-l2-btn" class="btn-mini warn hidden">🔐 Unlock Write</button>
+    </div>
   </div>
 
-  <!-- PIN UNLOCK -->
+  <!-- LEVEL 1 PIN UNLOCK (READ-ONLY) -->
   <div id="pin-card" class="card">
-    <h3>Enter Team PIN</h3>
-    <p class="muted" style="margin-bottom:8px;">Unlocks the latest synced cash, trip scorecards, and passenger manifests locally on your phone.</p>
-    <input type="password" id="obs-pin" placeholder="Team PIN" />
-    <button id="unlock-btn" class="btn">Unlock Portal</button>
+    <h3>Level 1 — Team Read-Only Access</h3>
+    <p class="muted" style="margin-bottom:8px;">Enter the shared Team PIN to view live cash, trip scorecards, passenger manifests, and monthly close figures.</p>
+    <input type="password" id="obs-pin" placeholder="Shared Team PIN" />
+    <button id="unlock-btn" class="btn">Unlock Portal (Read-Only)</button>
     <div id="obs-err" class="muted" style="color:var(--danger); margin-top:8px;"></div>
   </div>
 
@@ -141,6 +158,7 @@
       <button class="tab-btn" data-tab="tab-manifests">Manifests</button>
       <button class="tab-btn" data-tab="tab-followups">Follow-Ups</button>
       <button class="tab-btn" data-tab="tab-activity">Activity</button>
+      <button class="tab-btn" data-tab="tab-requests">Requests</button>
     </nav>
 
     <!-- 1. OVERVIEW TAB -->
@@ -152,6 +170,15 @@
           <div><span class="muted">Total Cash on Hand</span><br><strong id="obs-total">KSh 0</strong></div>
           <div style="text-align:right;"><span class="muted">Spoken For (Deposits + Bills)</span><br><strong style="color:var(--gold)" id="obs-restricted">KSh 0</strong></div>
         </div>
+      </div>
+
+      <!-- MONTHLY CO-FOUNDER CLOSE SNAPSHOT -->
+      <div class="card">
+        <div class="split" style="align-items:center; margin-bottom:8px;">
+          <h3 style="margin:0;">Monthly Co-Founder Close Snapshot</h3>
+          <span class="badge blue">ALL 5 ROLES</span>
+        </div>
+        <div class="grid-2" id="obs-monthly-close"></div>
       </div>
 
       <div id="obs-scorecards"></div>
@@ -230,6 +257,159 @@
         <div id="act-feed" style="margin-top:6px;"></div>
       </div>
     </section>
+
+    <!-- 5. LEVEL 2: REQUESTS & CO-APPROVALS TAB -->
+    <section id="tab-requests" class="tab-panel hidden">
+      <!-- LEVEL 2 LOGIN CARD -->
+      <div id="l2-login-card" class="card">
+        <h3>🔐 Level 2 — Role Write & Approval Access</h3>
+        <p class="muted" style="margin-bottom:8px;">Sign in with your personal Role PIN to log supplier bills, spend requests, deposits, or out-of-pocket expenses, and to co-approve items for Shakeela's final sign-off.</p>
+
+        <label class="field-label">Your Name / Role</label>
+        <select id="l2-role-select">
+          <option value="strategy">Michael — Strategy, Partnerships & Clinical</option>
+          <option value="growth">Robert — Partnerships, Growth & Ops Backup</option>
+          <option value="ops">Edna — Tech & Operations Lead</option>
+          <option value="marketing">Tiffany — Marketing, Brand & Community</option>
+        </select>
+
+        <label class="field-label">Personal 4-Digit Role PIN</label>
+        <input type="password" id="l2-pin-input" placeholder="Enter your personal PIN" />
+
+        <label class="field-label">GitHub Repo (Saved Once on Device)</label>
+        <input type="text" id="l2-gh-repo" placeholder="michaelgriffinsk-wq/talani-accounts" />
+
+        <label class="field-label">GitHub Write Token (Saved Once on Device)</label>
+        <input type="password" id="l2-gh-token" placeholder="github_pat_..." />
+
+        <button id="l2-unlock-btn" class="btn" style="margin-top:6px;">Unlock Level 2 Access</button>
+        <div id="l2-err" class="muted small" style="color:var(--danger); margin-top:8px;"></div>
+      </div>
+
+      <!-- LEVEL 2 WORKSPACE -->
+      <div id="l2-workspace" class="hidden">
+        <div class="card" style="border-color:rgba(16,185,129,0.4);">
+          <div class="split" style="align-items:center;">
+            <div>
+              <strong id="l2-active-user">Signed In</strong>
+              <div class="muted small" id="l2-active-perms"></div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button id="l2-refresh-btn" class="btn-mini blue">↻ Sync</button>
+              <button id="l2-lock-btn" class="btn-mini danger">🔒 Lock</button>
+            </div>
+          </div>
+          <div id="l2-sync-status" class="muted small" style="margin-top:6px;"></div>
+        </div>
+
+        <!-- NEW REQUEST FORM -->
+        <div class="card">
+          <h3>+ Submit Request for Finance Approval</h3>
+
+          <div class="form-row">
+            <div>
+              <label class="field-label">Request Type</label>
+              <select id="req-type">
+                <option value="SUPPLIER_BILL">Supplier Bill (A/P)</option>
+                <option value="SPEND_REQUEST">Cash / Spend Request</option>
+                <option value="CLIENT_DEPOSIT">Client Deposit Received</option>
+                <option value="OUT_OF_POCKET">Out-of-Pocket Purchase</option>
+                <option value="B2B_QUOTE">Custom B2B Quote / Discount</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Approval Category</label>
+              <select id="req-category">
+                <option value="OPS_BILL">Budgeted Trip Ops Bill</option>
+                <option value="AD_HOC">Ad-Hoc / Unbudgeted Spend</option>
+                <option value="CAPEX_ESCROW">CapEx / Asset / Escrow</option>
+                <option value="B2B_DISCOUNT">B2B Quote / Off-Card Discount</option>
+                <option value="MARKETING">Marketing / Brand Spend</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label class="field-label">Brand / Entity</label>
+              <select id="req-entity"></select>
+            </div>
+            <div>
+              <label class="field-label">Trip / Project Pool</label>
+              <select id="req-pool"></select>
+            </div>
+          </div>
+
+          <label class="field-label" id="req-cp-label">Vendor / Client / Payee Name</label>
+          <input type="text" id="req-counterparty" placeholder="e.g., Bamm Tours, Jane Doe, or KFS Gate" />
+
+          <label class="field-label">Description / Justification</label>
+          <input type="text" id="req-memo" placeholder="e.g., Gatamaiyu bus deposit, Meta ads, trail snacks" />
+
+          <div class="form-row">
+            <div>
+              <label class="field-label">Amount (KSh)</label>
+              <input type="number" id="req-amount" step="0.01" placeholder="0" />
+            </div>
+            <div id="req-acc-wrap">
+              <label class="field-label">Expense / Cost Account</label>
+              <select id="req-account">
+                <option value="5100">5100 — Fixed Trip COGS</option>
+                <option value="5200">5200 — Variable Trip COGS</option>
+                <option value="6100">6100 — Marketing / Overhead</option>
+                <option value="1500">1500 — Fixed Assets / CapEx</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- EXTRA FIELDS FOR CLIENT DEPOSIT -->
+          <div id="req-deposit-fields" class="form-row hidden">
+            <div>
+              <label class="field-label">Full Ticket Price (KSh)</label>
+              <input type="number" id="req-ticket-price" placeholder="3000" />
+            </div>
+            <div>
+              <label class="field-label">Discount (KSh)</label>
+              <input type="number" id="req-discount" value="0" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div>
+              <label class="field-label">M-Pesa / Bank Ref (Optional)</label>
+              <input type="text" id="req-mpesa" placeholder="e.g., UKL892X..." />
+            </div>
+            <div>
+              <label class="field-label">Due Date (For Bills)</label>
+              <input type="date" id="req-due" />
+            </div>
+          </div>
+
+          <label class="check-inline" id="req-verify-wrap">
+            <input type="checkbox" id="req-service-verified" />
+            <span>I confirm service/delivery is verified (Ops Maker-Checker)</span>
+          </label>
+
+          <button id="req-submit-btn" class="btn">Submit to Approvals Queue</button>
+        </div>
+
+        <!-- APPROVALS QUEUE -->
+        <div class="card">
+          <h3>Needs Co-Approval (Department Lead)</h3>
+          <div id="l2-coapprove-list"></div>
+        </div>
+
+        <div class="card">
+          <h3>Pending Finance Final Sign-Off (Shakeela)</h3>
+          <div id="l2-finance-list"></div>
+        </div>
+
+        <div class="card">
+          <h3>Recent Approved / Rejected</h3>
+          <div id="l2-history-list"></div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <script>
@@ -237,17 +417,74 @@
     const RESTRICTED = ["2010", "2020", "2030", "2040", "2050"];
     const CR_NORMAL = ["2010", "2020", "2030", "2040", "2050", "2100", "3010", "3020", "3025", "4010", "4020", "4030", "4040"];
     const BOARD_KEY = "talani_manifest_boarded_v1";
+    const GH_CFG_KEY = "talani_portal_gh_v1";
+
+    const ROLES = {
+      strategy: {
+        name: "Michael (Strategy & Clinical)",
+        permsLabel: "Co-approves CapEx, Escrow, Unbudgeted >5k, B2B Quotes & Clinical Spend",
+        canCoApprove: (r) => ["CAPEX_ESCROW", "AD_HOC", "B2B_DISCOUNT", "OPS_BILL", "MARKETING"].includes(r.category)
+      },
+      growth: {
+        name: "Robert (Growth & Ops Backup)",
+        permsLabel: "Co-approves B2B Quotes, Partnerships, Growth Assets & Ops Backup Bills",
+        canCoApprove: (r) => ["B2B_DISCOUNT", "OPS_BILL", "AD_HOC"].includes(r.category)
+      },
+      ops: {
+        name: "Edna (Tech & Ops)",
+        permsLabel: "Logs Operational Vendor Bills & Verifies Service Delivery",
+        canCoApprove: (r) => r.category === "OPS_BILL"
+      },
+      marketing: {
+        name: "Tiffany (Marketing & Brand)",
+        permsLabel: "Submits & Co-approves Marketing, Ads, Content & Merch Spend",
+        canCoApprove: (r) => r.category === "MARKETING"
+      }
+    };
 
     const fmt = (n) => "KSh " + Number(n || 0).toLocaleString("en-KE", { maximumFractionDigits: 2 });
     const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const todayStr = () => new Date().toISOString().slice(0, 10);
     const b64ToBuf = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    function bufToB64(buf) {
+      let bin = "";
+      new Uint8Array(buf).forEach((b) => (bin += String.fromCharCode(b)));
+      return btoa(bin);
+    }
 
+    let teamPin = "";
     let portalData = null;
     let manFilter = "ALL";
+    let activeRole = null; // null = Level 1 Read-Only, string = Level 2 Role
+    let ghCfg = (() => {
+      try { return JSON.parse(localStorage.getItem(GH_CFG_KEY) || '{"repo":"michaelgriffinsk-wq/talani-accounts","token":""}'); }
+      catch { return { repo: "michaelgriffinsk-wq/talani-accounts", token: "" }; }
+    })();
+    let approvalsQueue = { updatedAt: null, requests: [] };
+    let approvalsSha = null;
+
     let boardedMap = (() => {
       try { return JSON.parse(localStorage.getItem(BOARD_KEY) || "{}"); }
       catch { return {}; }
     })();
+
+    async function sha256Hex(text) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(text || "")));
+      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function encrypt(obj, pin) {
+      const enc = new TextEncoder();
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const keyMat = await crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]);
+      const key = await crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+        keyMat, { name: "AES-GCM", length: 256 }, false, ["encrypt"]
+      );
+      const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
+      return { v: 2, updatedAt: new Date().toISOString(), salt: bufToB64(salt), iv: bufToB64(iv), ct: bufToB64(cipher) };
+    }
 
     async function decrypt(pkg, pin) {
       const enc = new TextEncoder();
@@ -284,7 +521,12 @@
       }
     }
 
-    // ================= RENDERERS =================
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabId));
+      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("hidden", p.id !== tabId));
+    }
+
+    // ================= LEVEL 1 RENDERERS =================
     function renderOverview() {
       const bal = calc(portalData.entries);
       const totalCash = CASH.reduce((s, c) => s + (bal[c] || 0), 0);
@@ -292,6 +534,21 @@
       document.getElementById("obs-total").textContent = fmt(totalCash);
       document.getElementById("obs-restricted").textContent = fmt(restricted);
       document.getElementById("obs-free").textContent = fmt(totalCash - restricted);
+
+      // Monthly Co-Founder Close Snapshot
+      const pendingAP = (portalData.payables || [])
+        .filter((x) => x.status === "OPEN")
+        .reduce((s, x) => s + Math.max(0, x.totalAmount - (x.paidAmount || 0)), 0);
+      const escrowDep = Math.max(0, (bal["2010"] || 0) + (bal["2050"] || 0));
+      const rev = (bal["4010"] || 0) + (bal["4020"] || 0) + (bal["4030"] || 0) + (bal["4040"] || 0) - (bal["4090"] || 0);
+      const exp = (bal["5100"] || 0) + (bal["5200"] || 0) + (bal["5300"] || 0) + (bal["6100"] || 0) + (bal["6120"] || 0);
+      const netProfit = rev - exp;
+
+      document.getElementById("obs-monthly-close").innerHTML = `
+        <div class="stat-box"><span class="muted small">Total Cash on Hand</span><strong>${fmt(totalCash)}</strong></div>
+        <div class="stat-box"><span class="muted small">Net Realized Profit</span><strong style="color:${netProfit >= 0 ? "var(--accent)" : "var(--danger)"}">${fmt(netProfit)}</strong></div>
+        <div class="stat-box"><span class="muted small">Pending Payables (A/P)</span><strong style="color:var(--danger)">${fmt(pendingAP)}</strong></div>
+        <div class="stat-box"><span class="muted small">Client Deposits / Escrow</span><strong style="color:var(--gold)">${fmt(escrowDep)}</strong></div>`;
 
       // Trip Scorecards with Break-Even Coverage Meter
       const pools = portalData.pools || [];
@@ -348,12 +605,7 @@
         .map((b, idx) => {
           const netPrice = b.ticketPrice - (b.discount || 0);
           const owed = Math.max(0, netPrice - (b.paid || 0));
-          return {
-            ...b,
-            serial: `${prefix}-${String(idx + 1).padStart(2, "0")}`,
-            netPrice,
-            owed
-          };
+          return { ...b, serial: `${prefix}-${String(idx + 1).padStart(2, "0")}`, netPrice, owed };
         });
     }
 
@@ -503,31 +755,288 @@
       }).join("") || `<div class="muted">No cash activity matches this filter.</div>`;
     }
 
+    // ================= LEVEL 2: REQUESTS & CO-APPROVALS =================
+    function updateAccessBadge() {
+      const badge = document.getElementById("access-mode-badge");
+      const hBtn = document.getElementById("header-l2-btn");
+      if (activeRole) {
+        badge.textContent = `L2: ${ROLES[activeRole].name.split(" ")[0].toUpperCase()}`;
+        badge.className = "badge ok";
+        hBtn.textContent = "🔒 Lock";
+        hBtn.className = "btn-mini danger";
+      } else {
+        badge.textContent = "L1: READ-ONLY";
+        badge.className = "badge blue";
+        hBtn.textContent = "🔐 Unlock Write";
+        hBtn.className = "btn-mini warn";
+      }
+      hBtn.classList.remove("hidden");
+    }
+
+    async function pullApprovals() {
+      const st = document.getElementById("l2-sync-status");
+      if (!ghCfg.repo || !ghCfg.token) return;
+      st.textContent = "Syncing approvals queue...";
+      try {
+        const apiUrl = `https://api.github.com/repos/${ghCfg.repo.trim()}/contents/docs/approvals.enc.json`;
+        const res = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${ghCfg.token.trim()}`, Accept: "application/vnd.github+json" }
+        });
+        if (res.status === 404) {
+          approvalsQueue = { updatedAt: new Date().toISOString(), requests: [] };
+          approvalsSha = null;
+          st.textContent = "✓ Queue ready (no requests yet).";
+          renderRequestsQueue();
+          return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const file = await res.json();
+        approvalsSha = file.sha;
+        const pkg = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, "")))));
+        approvalsQueue = await decrypt(pkg, teamPin);
+        st.textContent = `✓ Queue synced at ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        renderRequestsQueue();
+      } catch (err) {
+        st.textContent = "Sync error: " + err.message;
+      }
+    }
+
+    async function pushApprovals() {
+      const apiUrl = `https://api.github.com/repos/${ghCfg.repo.trim()}/contents/docs/approvals.enc.json`;
+      const headers = {
+        Authorization: `Bearer ${ghCfg.token.trim()}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json"
+      };
+      const check = await fetch(apiUrl, { headers });
+      if (check.ok) approvalsSha = (await check.json()).sha;
+
+      approvalsQueue.updatedAt = new Date().toISOString();
+      const encrypted = await encrypt(approvalsQueue, teamPin);
+      const contentB64 = btoa(unescape(encodeURIComponent(JSON.stringify(encrypted, null, 2))));
+      const put = await fetch(apiUrl, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          message: `Portal request update by ${ROLES[activeRole]?.name || activeRole}`,
+          content: contentB64,
+          sha: approvalsSha || undefined
+        })
+      });
+      if (!put.ok) throw new Error((await put.json()).message || `HTTP ${put.status}`);
+      approvalsSha = (await put.json()).content?.sha || approvalsSha;
+    }
+
+    window.coApproveRequest = async function (reqId) {
+      if (!activeRole) return;
+      const r = (approvalsQueue.requests || []).find((x) => x.id === reqId);
+      if (!r || !ROLES[activeRole].canCoApprove(r)) return;
+      r.coApprovedBy = ROLES[activeRole].name;
+      if (activeRole === "ops" && r.category === "OPS_BILL") r.serviceVerified = true;
+      r.status = "PENDING_FINANCE";
+      document.getElementById("l2-sync-status").textContent = "Saving co-approval...";
+      try {
+        await pushApprovals();
+        document.getElementById("l2-sync-status").textContent = "✓ Co-approved and sent to Shakeela.";
+        renderRequestsQueue();
+      } catch (err) {
+        alert("Failed to save co-approval: " + err.message);
+      }
+    };
+
+    function renderReqItem(r, allowCoApprove) {
+      const pool = (portalData.pools || []).find((p) => p.id === r.poolId)?.name || "";
+      const typeLabel = {
+        SUPPLIER_BILL: "Supplier Bill (A/P)",
+        SPEND_REQUEST: "Cash / Spend",
+        CLIENT_DEPOSIT: "Client Deposit",
+        OUT_OF_POCKET: "Out-of-Pocket",
+        B2B_QUOTE: "B2B Quote / Discount"
+      }[r.type] || r.type;
+      const canAct = allowCoApprove && activeRole && ROLES[activeRole].canCoApprove(r);
+
+      return `
+        <div class="req-card">
+          <div class="split" style="align-items:center;">
+            <strong>${esc(r.counterparty || r.memo)}</strong>
+            <strong style="color:var(--accent)">${fmt(r.amount)}</strong>
+          </div>
+          <div class="req-meta">
+            <span class="tag">${esc(typeLabel)}</span>
+            <span class="tag">${esc(pool)}</span>
+            <span class="tag">By: ${esc(r.createdByName)}</span>
+            ${r.coApprovedBy ? `<span class="tag" style="color:var(--accent)">Co-Approved: ${esc(r.coApprovedBy)}</span>` : ""}
+            ${r.serviceVerified ? `<span class="tag" style="color:var(--accent)">Service Verified ✓</span>` : ""}
+          </div>
+          <div class="muted small">${esc(r.memo)}${r.mpesaCode ? ` • Ref: ${esc(r.mpesaCode)}` : ""}${r.financeNote ? ` • Finance: ${esc(r.financeNote)}` : ""}</div>
+          ${canAct ? `<div class="btn-row"><button class="btn-mini ok" onclick="coApproveRequest('${r.id}')">✓ Co-Approve & Send to Finance</button></div>` : ""}
+          ${r.status === "APPROVED_POSTED" ? `<div style="margin-top:6px;"><span class="badge ok">✓ APPROVED & POSTED</span></div>` : ""}
+          ${r.status === "REJECTED" ? `<div style="margin-top:6px;"><span class="badge err">✕ REJECTED</span></div>` : ""}
+        </div>`;
+    }
+
+    function renderRequestsQueue() {
+      const list = approvalsQueue.requests || [];
+      const needCo = list.filter((r) => r.status === "PENDING_CO_APPROVAL");
+      const needFin = list.filter((r) => r.status === "PENDING_FINANCE");
+      const hist = list.filter((r) => r.status === "APPROVED_POSTED" || r.status === "REJECTED").slice(0, 20);
+
+      document.getElementById("l2-coapprove-list").innerHTML = needCo.map((r) => renderReqItem(r, true)).join("") || `<div class="muted small">None awaiting department co-approval.</div>`;
+      document.getElementById("l2-finance-list").innerHTML = needFin.map((r) => renderReqItem(r, false)).join("") || `<div class="muted small">None pending Shakeela's sign-off.</div>`;
+      document.getElementById("l2-history-list").innerHTML = hist.map((r) => renderReqItem(r, false)).join("") || `<div class="muted small">No completed decisions yet.</div>`;
+    }
+
+    function syncReqFormFields() {
+      const t = document.getElementById("req-type").value;
+      document.getElementById("req-deposit-fields").classList.toggle("hidden", t !== "CLIENT_DEPOSIT");
+      document.getElementById("req-acc-wrap").classList.toggle("hidden", t === "CLIENT_DEPOSIT" || t === "B2B_QUOTE");
+      document.getElementById("req-verify-wrap").classList.toggle("hidden", t !== "SUPPLIER_BILL");
+      document.getElementById("req-cp-label").textContent = t === "CLIENT_DEPOSIT" ? "Client Full Name" : "Vendor / Counterparty / Payee";
+    }
+
     function initPortalUI() {
       const pools = portalData.pools || [];
       const ents = portalData.entities || [];
 
-      document.getElementById("man-pool-select").innerHTML = pools
-        .map((p) => `<option value="${p.id}">${esc(p.name)}${p.status === "CLOSED" ? " [CLOSED]" : ""}</option>`)
-        .join("");
+      const poolOpts = pools.map((p) => `<option value="${p.id}">${esc(p.name)}${p.status === "CLOSED" ? " [CLOSED]" : ""}</option>`).join("");
+      const entOpts = ents.map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
 
-      document.getElementById("act-entity-filter").innerHTML = `<option value="all">All Brands</option>` + ents.map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
-      document.getElementById("act-pool-filter").innerHTML = `<option value="all">All Trips</option>` + pools.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+      document.getElementById("man-pool-select").innerHTML = poolOpts;
+      document.getElementById("act-entity-filter").innerHTML = `<option value="all">All Brands</option>` + entOpts;
+      document.getElementById("act-pool-filter").innerHTML = `<option value="all">All Trips</option>` + poolOpts;
+      document.getElementById("req-entity").innerHTML = entOpts;
+      document.getElementById("req-pool").innerHTML = poolOpts;
+      document.getElementById("req-due").value = todayStr();
+
+      document.getElementById("l2-gh-repo").value = ghCfg.repo || "michaelgriffinsk-wq/talani-accounts";
+      document.getElementById("l2-gh-token").value = ghCfg.token || "";
 
       renderOverview();
       renderManifest();
       renderFollowUps();
       renderActivity();
+      syncReqFormFields();
+      updateAccessBadge();
     }
 
     // ================= EVENTS =================
     document.querySelectorAll(".tab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-        document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.tab).classList.remove("hidden");
-      });
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    document.getElementById("header-l2-btn").addEventListener("click", () => {
+      if (activeRole) {
+        activeRole = null;
+        document.getElementById("l2-workspace").classList.add("hidden");
+        document.getElementById("l2-login-card").classList.remove("hidden");
+        document.getElementById("l2-pin-input").value = "";
+        updateAccessBadge();
+      } else {
+        switchTab("tab-requests");
+      }
+    });
+
+    document.getElementById("l2-lock-btn").addEventListener("click", () => {
+      activeRole = null;
+      document.getElementById("l2-workspace").classList.add("hidden");
+      document.getElementById("l2-login-card").classList.remove("hidden");
+      document.getElementById("l2-pin-input").value = "";
+      updateAccessBadge();
+    });
+
+    document.getElementById("l2-unlock-btn").addEventListener("click", async () => {
+      const role = document.getElementById("l2-role-select").value;
+      const pin = document.getElementById("l2-pin-input").value.trim();
+      const repo = document.getElementById("l2-gh-repo").value.trim();
+      const token = document.getElementById("l2-gh-token").value.trim();
+      const errEl = document.getElementById("l2-err");
+
+      if (!pin) { errEl.textContent = "Enter your personal Role PIN."; return; }
+      if (!repo || !token) { errEl.textContent = "Enter the GitHub Repo and Write Token (saved once on your phone)."; return; }
+
+      const savedHashes = portalData?.rolePinHashes || {};
+      if (!savedHashes[role]?.hash) {
+        errEl.textContent = "Shakeela hasn't set a PIN for this role in Master App → Setup yet.";
+        return;
+      }
+
+      const enteredHash = await sha256Hex(`${role}:${pin}`);
+      if (enteredHash !== savedHashes[role].hash) {
+        errEl.textContent = "Incorrect Role PIN. Try again.";
+        return;
+      }
+
+      errEl.textContent = "";
+      ghCfg = { repo, token };
+      localStorage.setItem(GH_CFG_KEY, JSON.stringify(ghCfg));
+      activeRole = role;
+
+      document.getElementById("l2-active-user").textContent = ROLES[role].name;
+      document.getElementById("l2-active-perms").textContent = ROLES[role].permsLabel;
+      document.getElementById("l2-login-card").classList.add("hidden");
+      document.getElementById("l2-workspace").classList.remove("hidden");
+      updateAccessBadge();
+      pullApprovals();
+    });
+
+    document.getElementById("l2-refresh-btn").addEventListener("click", pullApprovals);
+    document.getElementById("req-type").addEventListener("change", syncReqFormFields);
+
+    document.getElementById("req-submit-btn").addEventListener("click", async () => {
+      if (!activeRole) return;
+      const type = document.getElementById("req-type").value;
+      const category = document.getElementById("req-category").value;
+      const counterparty = document.getElementById("req-counterparty").value.trim();
+      const memo = document.getElementById("req-memo").value.trim();
+      const amount = Number(document.getElementById("req-amount").value || 0);
+      const serviceVerified = document.getElementById("req-service-verified").checked;
+
+      if (!counterparty || amount <= 0) return alert("Enter a name/vendor and a valid amount.");
+
+      const selfCoApprove = ROLES[activeRole].canCoApprove({ category }) && (type !== "SUPPLIER_BILL" || serviceVerified);
+      const req = {
+        id: "REQ-" + Date.now(),
+        type,
+        category,
+        entityId: document.getElementById("req-entity").value,
+        poolId: document.getElementById("req-pool").value,
+        counterparty,
+        memo: memo || counterparty,
+        amount,
+        accountCode: type === "CLIENT_DEPOSIT" ? "2010" : document.getElementById("req-account").value,
+        cashAccountCode: "1010",
+        mpesaCode: document.getElementById("req-mpesa").value.trim().toUpperCase(),
+        dueDate: document.getElementById("req-due").value || todayStr(),
+        ticketPrice: Number(document.getElementById("req-ticket-price").value || amount),
+        discount: Number(document.getElementById("req-discount").value || 0),
+        serviceVerified,
+        createdByRole: activeRole,
+        createdByName: ROLES[activeRole].name,
+        createdAt: new Date().toISOString(),
+        coApprovedBy: selfCoApprove ? ROLES[activeRole].name : null,
+        status: selfCoApprove ? "PENDING_FINANCE" : "PENDING_CO_APPROVAL",
+        financeNote: ""
+      };
+
+      document.getElementById("l2-sync-status").textContent = "Submitting encrypted request...";
+      try {
+        await pullApprovals();
+        approvalsQueue.requests = approvalsQueue.requests || [];
+        approvalsQueue.requests.unshift(req);
+        await pushApprovals();
+
+        document.getElementById("req-counterparty").value = "";
+        document.getElementById("req-memo").value = "";
+        document.getElementById("req-amount").value = "";
+        document.getElementById("req-mpesa").value = "";
+        document.getElementById("req-service-verified").checked = false;
+        document.getElementById("l2-sync-status").textContent = selfCoApprove
+          ? "✓ Submitted & sent straight to Shakeela for Finance sign-off."
+          : "✓ Submitted! Waiting for Department Lead co-approval.";
+        renderRequestsQueue();
+      } catch (err) {
+        alert("Submission failed: " + err.message);
+      }
     });
 
     document.querySelectorAll("#man-filters .pill").forEach((p) => {
@@ -572,6 +1081,7 @@
         if (!res.ok) throw new Error("No synced ledger found yet.");
         const pkg = await res.json();
         portalData = await decrypt(pkg, pin);
+        teamPin = pin;
 
         document.getElementById("obs-updated").textContent = "Last synced: " + new Date(pkg.updatedAt).toLocaleString();
         initPortalUI();
