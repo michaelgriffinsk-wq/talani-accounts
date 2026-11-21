@@ -57,24 +57,29 @@ function fmtKES(n) { return "KSh " + Number(n || 0).toLocaleString("en-KE", { mi
 function esc(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function getAcc(code) { return COA.find((a) => a.code === code) || { code, name: code, type: "EXPENSE", normal: "DR" }; }
 
+function normalizeLedgerData(p) {
+  return {
+    ...JSON.parse(JSON.stringify(DEFAULT_LEDGER)),
+    ...p,
+    schemaVersion: 2,
+    entities: p?.entities?.length ? p.entities : DEFAULT_LEDGER.entities,
+    pools: (p?.pools?.length ? p.pools : DEFAULT_LEDGER.pools).map((x) => ({ status: "OPEN", ...x })),
+    entries: p?.entries || [],
+    bookings: p?.bookings || [],
+    payables: p?.payables || [],
+    floats: p?.floats || [],
+    reimbursements: p?.reimbursements || []
+  };
+}
+
 function loadLedger() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return JSON.parse(JSON.stringify(DEFAULT_LEDGER));
-    const p = JSON.parse(raw);
-    return {
-      ...JSON.parse(JSON.stringify(DEFAULT_LEDGER)),
-      ...p,
-      schemaVersion: 2,
-      entities: p.entities?.length ? p.entities : DEFAULT_LEDGER.entities,
-      pools: (p.pools?.length ? p.pools : DEFAULT_LEDGER.pools).map((x) => ({ status: "OPEN", ...x })),
-      entries: p.entries || [],
-      bookings: p.bookings || [],
-      payables: p.payables || [],
-      floats: p.floats || [],
-      reimbursements: p.reimbursements || []
-    };
-  } catch { return JSON.parse(JSON.stringify(DEFAULT_LEDGER)); }
+    return normalizeLedgerData(JSON.parse(raw));
+  } catch {
+    return JSON.parse(JSON.stringify(DEFAULT_LEDGER));
+  }
 }
 
 function loadSecrets() {
@@ -509,7 +514,6 @@ window.runTripClose = function (poolId) {
   const reservePct = Number(prompt(`Recognize ${fmtKES(deferred)} Deferred → Earned Revenue.\nEnter Reserve Allocation % of Net Profit (e.g., 10 for Tithe/Reserve, 0 to skip):`, "10") || 0);
 
   try {
-    // Step 2: Recognize Deferred -> Earned Revenue (plus Contra-Revenue discounts)
     if (deferred > 0) {
       const lines = [
         { accountCode: "2010", debit: deferred, credit: 0 },
@@ -520,7 +524,6 @@ window.runTripClose = function (poolId) {
     }
     poolBookings.forEach((b) => (b.status = "EARNED"));
 
-    // Step 3: Allocate Designated Reserve from Net Profit
     const freshBal = computeBalances(ledger.entries.filter((e) => e.poolId === poolId));
     const rev = (freshBal["4010"] || 0) + (freshBal["4020"] || 0) + (freshBal["4040"] || 0) - (freshBal["4090"] || 0);
     const exp = (freshBal["5100"] || 0) + (freshBal["5200"] || 0) + (freshBal["6100"] || 0) + (freshBal["6120"] || 0);
@@ -542,7 +545,6 @@ window.runTripClose = function (poolId) {
       }
     }
 
-    // Step 4: Lock Pool
     pool.status = "CLOSED";
     saveLedger(true);
     renderAll();
@@ -777,6 +779,7 @@ window.renamePool = function (id) {
 
 document.getElementById("save-cfg-btn").addEventListener("click", () => {
   secrets = {
+    ...secrets,
     geminiKey: document.getElementById("cfg-gemini-key").value.trim(),
     ghRepo: document.getElementById("cfg-gh-repo").value.trim(),
     ghToken: document.getElementById("cfg-gh-token").value.trim(),
@@ -789,7 +792,34 @@ document.getElementById("save-cfg-btn").addEventListener("click", () => {
 document.getElementById("export-vault-btn").addEventListener("click", () => {
   const json = JSON.stringify(ledger, null, 2);
   const filename = `talani-accounts-vault-${todayStr()}.json`;
-  window.nativeExportFile(filename, json, document.getElementById("vault-status"));
+  if (typeof window.nativeExportFile === "function") {
+    window.nativeExportFile(filename, json, document.getElementById("vault-status"));
+  }
+});
+
+document.getElementById("import-vault-input")?.addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  const statusEl = document.getElementById("vault-status");
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const parsed = JSON.parse(String(ev.target.result || "{}"));
+      const candidate = parsed?.ledger && typeof parsed.ledger === "object" ? parsed.ledger : parsed;
+      if (!candidate || typeof candidate !== "object") throw new Error("Invalid vault JSON.");
+      ledger = normalizeLedgerData(candidate);
+      saveLedger(false);
+      renderAll();
+      if (statusEl) statusEl.textContent = `✓ Imported vault (${ledger.entries.length} JEs).`;
+    } catch (err) {
+      if (statusEl) statusEl.textContent = "Import failed: " + err.message;
+      alert("Import failed: " + err.message);
+    } finally {
+      e.target.value = "";
+    }
+  };
+  reader.readAsText(file);
 });
 
 // ================= RENDERERS =================
@@ -852,7 +882,6 @@ function renderDashboard() {
 }
 
 function renderOps() {
-  // Clients A/R
   document.getElementById("ar-list").innerHTML = ledger.bookings.map((b) => {
     const pool = ledger.pools.find((p) => p.id === b.poolId)?.name || "";
     const bal = Math.max(0, b.ticketPrice - b.discount - b.paid);
@@ -879,7 +908,6 @@ function renderOps() {
     </div>`;
   }).join("") || `<div class="card muted">No client bookings logged yet.</div>`;
 
-  // Suppliers A/P
   document.getElementById("ap-list").innerHTML = ledger.payables.map((p) => {
     const pool = ledger.pools.find((x) => x.id === p.poolId)?.name || "";
     const bal = Math.max(0, p.totalAmount - p.paidAmount);
@@ -898,7 +926,6 @@ function renderOps() {
     </div>`;
   }).join("") || `<div class="card muted">No supplier payables logged yet.</div>`;
 
-  // Trail Floats
   document.getElementById("float-list").innerHTML = ledger.floats.map((f) => {
     const rem = Math.max(0, f.issued - f.spent - f.returned);
     return `
@@ -920,7 +947,6 @@ function renderOps() {
     </div>`;
   }).join("") || `<div class="card muted">No active trail floats.</div>`;
 
-  // Partner Reimbursements
   document.getElementById("reimb-list").innerHTML = ledger.reimbursements.map((r) => `
     <div class="je-card ${r.status === "PAID" ? "settled" : ""}">
       <div class="card-top" style="margin-bottom:4px;">
@@ -1034,4 +1060,6 @@ document.querySelectorAll("#ops-subtabs .pill").forEach((p) => {
 
 ["filter-entity", "filter-pool", "filter-search"].forEach((id) => document.getElementById(id).addEventListener("input", renderLedger));
 
-renderAll();
+window.addEventListener("DOMContentLoaded", () => {
+  renderAll();
+});
