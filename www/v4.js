@@ -184,7 +184,7 @@ Return ONLY raw JSON:
   }
 
   // ================= 4. CPA CSV EXPORTS (Android Share + Desktop Download) =================
-    window.nativeExportFile = async function (filename, content, statusEl) {
+  window.nativeExportFile = async function (filename, content, statusEl) {
     try { await navigator.clipboard.writeText(content); } catch {}
 
     const { Filesystem, Share } = window.Capacitor?.Plugins || {};
@@ -214,9 +214,6 @@ Return ONLY raw JSON:
     const statusEl = document.getElementById("cpa-exp-status");
     return window.nativeExportFile(filename, csv, statusEl);
   }
-
-
-
 
   document.getElementById("exp-tb-btn")?.addEventListener("click", () => {
     const b = computeBalances();
@@ -323,7 +320,8 @@ Return ONLY raw JSON:
     renderV4();
   };
   renderV4();
-    // ================= 6. SHOW UNPAID CLIENT BALANCES =================
+
+  // ================= 6. SHOW UNPAID CLIENT BALANCES =================
   document.getElementById("show-owed-btn")?.addEventListener("click", () => {
     const box = document.getElementById("ar-owed-box");
     if (!box) return;
@@ -371,4 +369,81 @@ Return ONLY raw JSON:
       });
     });
   });
+
+  // ================= 7. AI PARSER -> CLIENT A/R BRIDGE =================
+  function refreshDraftArBridge() {
+    const bridge = document.getElementById("draft-ar-bridge");
+    const offsetAcc = document.getElementById("draft-offset-acc")?.value;
+    const modeSel = document.getElementById("draft-ar-mode");
+    const newFields = document.getElementById("draft-ar-new-fields");
+    if (!bridge || !modeSel) return;
+
+    const isClientDeposit = offsetAcc === "2010" || offsetAcc === "1100";
+    bridge.classList.toggle("hidden", !isClientDeposit);
+    if (!isClientDeposit) return;
+
+    const unpaidOpts = (ledger.bookings || [])
+      .filter((b) => b.status === "ACTIVE")
+      .map((b) => {
+        const owed = Math.max(0, b.ticketPrice - (b.discount || 0) - (b.paid || 0));
+        return owed > 0 ? `<option value="${b.id}">Apply to: ${esc(b.clientName)} (Owes ${fmtKES(owed)})</option>` : "";
+      })
+      .join("");
+
+    modeSel.innerHTML = `
+      <option value="none">Do not link to Client A/R</option>
+      <option value="new">+ Create New Client Booking</option>
+      ${unpaidOpts}`;
+
+    newFields.classList.add("hidden");
+    const memoVal = document.getElementById("draft-memo")?.value || "";
+    const nameInput = document.getElementById("draft-ar-name");
+    if (nameInput && !nameInput.value) nameInput.value = memoVal;
+  }
+
+  document.getElementById("draft-offset-acc")?.addEventListener("change", refreshDraftArBridge);
+  document.getElementById("draft-ar-mode")?.addEventListener("change", (e) => {
+    document.getElementById("draft-ar-new-fields")?.classList.toggle("hidden", e.target.value !== "new");
+  });
+
+  // Auto-refresh bridge whenever the AI draft card opens
+  const draftCardEl = document.getElementById("draft-card");
+  if (draftCardEl) {
+    new MutationObserver(() => {
+      if (!draftCardEl.classList.contains("hidden")) refreshDraftArBridge();
+    }).observe(draftCardEl, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  // Capture A/R link right before app.js posts & clears the draft
+  document.getElementById("post-draft-btn")?.addEventListener("click", () => {
+    const bridge = document.getElementById("draft-ar-bridge");
+    if (!bridge || bridge.classList.contains("hidden")) return;
+
+    const mode = document.getElementById("draft-ar-mode")?.value;
+    const amount = Number(document.getElementById("draft-amount")?.value || 0);
+    if (!mode || mode === "none" || amount <= 0) return;
+
+    ledger.bookings = ledger.bookings || [];
+    if (mode === "new") {
+      const clientName = (document.getElementById("draft-ar-name")?.value || document.getElementById("draft-memo")?.value || "Client").trim();
+      const ticketPrice = Number(document.getElementById("draft-ar-price")?.value || amount);
+      const discount = Number(document.getElementById("draft-ar-disc")?.value || 0);
+      ledger.bookings.push({
+        id: "bk-" + Date.now(),
+        entityId: document.getElementById("draft-entity").value,
+        poolId: document.getElementById("draft-pool").value,
+        clientName,
+        ticketPrice,
+        discount,
+        paid: amount,
+        isAgency: false,
+        status: "ACTIVE"
+      });
+    } else {
+      const existing = ledger.bookings.find((b) => b.id === mode);
+      if (existing) existing.paid = (existing.paid || 0) + amount;
+    }
+    document.getElementById("draft-ar-name").value = "";
+    document.getElementById("draft-ar-price").value = "";
+  }, true);
 })();
