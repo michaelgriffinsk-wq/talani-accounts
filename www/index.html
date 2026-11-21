@@ -456,15 +456,18 @@
 
       <!-- CONVERSATIONAL AI CFO -->
       <div id="rep-cfo" class="ops-panel">
-        <div class="card">
-          <h3>🤖 AI CFO Copilot</h3>
-          <p class="muted" style="margin-bottom:8px;">Ask anything about your live cash, trip margins, unpaid balances, or KRA eTIMS exposure.</p>
-          <div id="cfo-chat-box" class="journal-preview" style="max-height:240px; overflow-y:auto;">
-            <div class="muted">Try: "What is our free cash excluding deposits?" or "Which trip pool has the highest costs?"</div>
+        <div class="card cfo-shell">
+          <div class="cfo-topbar">
+            <select id="cfo-thread-select" style="margin:0; flex:1;"></select>
+            <button id="cfo-new-btn" class="btn-mini ok">+ New</button>
+            <button id="cfo-del-btn" class="btn-mini danger" title="Delete chat">🗑</button>
           </div>
-          <div class="add-row">
-            <input type="text" id="cfo-input" placeholder="Ask your AI CFO..." />
-            <button id="cfo-send-btn" class="btn-mini ok">Ask</button>
+
+          <div id="cfo-chat-box" class="cfo-stream"></div>
+
+          <div class="cfo-composer">
+            <input type="text" id="cfo-input" placeholder="Ask your AI CFO anything..." style="margin:0; flex:1;" />
+            <button id="cfo-send-btn" class="btn-mini ok" style="padding:10px 14px;">Send</button>
           </div>
         </div>
       </div>
