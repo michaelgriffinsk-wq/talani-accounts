@@ -241,15 +241,150 @@ Return ONLY raw JSON:
     downloadCSV(`Talani_General_Ledger_${todayStr()}.csv`, rows);
   });
 
-  // ================= 5. CONVERSATIONAL AI CFO =================
-  document.getElementById("cfo-send-btn")?.addEventListener("click", async () => {
-    const q = document.getElementById("cfo-input").value.trim();
+    // ================= 5. CONVERSATIONAL AI CFO (MULTI-THREAD + MARKDOWN) =================
+  const CFO_KEY = "talani_cfo_chats_v1";
+  let cfoStore = (() => {
+    try { return JSON.parse(localStorage.getItem(CFO_KEY)) || { activeId: null, threads: [] }; }
+    catch { return { activeId: null, threads: [] }; }
+  })();
+
+  function saveCfoStore() { localStorage.setItem(CFO_KEY, JSON.stringify(cfoStore)); }
+
+  function createCfoThread() {
+    const t = { id: "cfo_" + Date.now(), title: "New CFO Chat", createdAt: todayStr(), messages: [] };
+    cfoStore.threads.unshift(t);
+    cfoStore.activeId = t.id;
+    saveCfoStore();
+    renderCfoUI();
+    return t;
+  }
+
+  function getActiveThread() {
+    let t = cfoStore.threads.find((x) => x.id === cfoStore.activeId);
+    if (!t) t = cfoStore.threads[0] || createCfoThread();
+    cfoStore.activeId = t.id;
+    return t;
+  }
+
+  function renderMarkdown(raw) {
+    const safe = esc(raw || "");
+    const lines = safe.split("\n");
+    let html = "", inUl = false, inOl = false, inTable = false;
+
+    const closeLists = () => {
+      if (inUl) { html += "</ul>"; inUl = false; }
+      if (inOl) { html += "</ol>"; inOl = false; }
+      if (inTable) { html += "</tbody></table>"; inTable = false; }
+    };
+    const inline = (s) => s
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) { closeLists(); continue; }
+
+      // Markdown table
+      if (line.startsWith("|") && line.endsWith("|")) {
+        if (/^\|[\s\-:|]+\|$/.test(line)) continue;
+        const cells = line.slice(1, -1).split("|").map((c) => inline(c.trim()));
+        if (!inTable) {
+          closeLists();
+          inTable = true;
+          html += `<table><thead><tr>${cells.map((c) => `<th>${c}</th>`).join("")}</tr></thead><tbody>`;
+        } else {
+          html += `<tr>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+        }
+        continue;
+      }
+
+      if (inTable) closeLists();
+
+      if (line.startsWith("### ")) { closeLists(); html += `<h4>${inline(line.slice(4))}</h4>`; }
+      else if (line.startsWith("## ")) { closeLists(); html += `<h3>${inline(line.slice(3))}</h3>`; }
+      else if (/^[-*]\s+/.test(line)) {
+        if (inOl) { html += "</ol>"; inOl = false; }
+        if (!inUl) { html += "<ul>"; inUl = true; }
+        html += `<li>${inline(line.replace(/^[-*]\s+/, ""))}</li>`;
+      } else if (/^\d+\.\s+/.test(line)) {
+        if (inUl) { html += "</ul>"; inUl = false; }
+        if (!inOl) { html += "<ol>"; inOl = true; }
+        html += `<li>${inline(line.replace(/^\d+\.\s+/, ""))}</li>`;
+      } else {
+        closeLists();
+        html += `<p>${inline(line)}</p>`;
+      }
+    }
+    closeLists();
+    return html;
+  }
+
+  function renderCfoUI() {
+    const sel = document.getElementById("cfo-thread-select");
+    const box = document.getElementById("cfo-chat-box");
+    if (!sel || !box) return;
+
+    const active = getActiveThread();
+    sel.innerHTML = cfoStore.threads
+      .map((t) => `<option value="${t.id}" ${t.id === active.id ? "selected" : ""}>💬 ${esc(t.title)} (${t.createdAt})</option>`)
+      .join("");
+
+    if (!active.messages.length) {
+      box.innerHTML = `<div class="cfo-empty">
+        <strong>🤖 Talani AI CFO</strong><br/>
+        Ask about free cash, trip margins, unpaid balances, or KRA eTIMS exposure.<br/><br/>
+        <em>Try: "Break down Gatamaiyu Expedition profit vs. unpaid balances in a table."</em>
+      </div>`;
+      return;
+    }
+
+    box.innerHTML = active.messages.map((m) =>
+      m.role === "user"
+        ? `<div class="cfo-msg user">${esc(m.text).replace(/\n/g, "<br>")}</div>`
+        : `<div class="cfo-msg model"><div class="cfo-role">🤖 AI CFO</div>${renderMarkdown(m.text)}</div>`
+    ).join("");
+    box.scrollTop = box.scrollHeight;
+  }
+
+  document.getElementById("cfo-thread-select")?.addEventListener("change", (e) => {
+    cfoStore.activeId = e.target.value;
+    saveCfoStore();
+    renderCfoUI();
+  });
+
+  document.getElementById("cfo-new-btn")?.addEventListener("click", () => createCfoThread());
+
+  document.getElementById("cfo-del-btn")?.addEventListener("click", () => {
+    const active = getActiveThread();
+    if (!confirm(`Delete chat "${active.title}"?`)) return;
+    cfoStore.threads = cfoStore.threads.filter((t) => t.id !== active.id);
+    cfoStore.activeId = cfoStore.threads[0]?.id || null;
+    saveCfoStore();
+    renderCfoUI();
+  });
+
+  async function sendCfoMessage() {
+    const input = document.getElementById("cfo-input");
+    const q = input.value.trim();
     if (!q) return;
     if (!secrets.geminiKey) return alert("Paste your Gemini API key in Setup first.");
 
+    const thread = getActiveThread();
+    if (!thread.messages.length) {
+      thread.title = q.length > 34 ? q.slice(0, 34) + "…" : q;
+    }
+    thread.messages.push({ role: "user", text: q });
+    input.value = "";
+    saveCfoStore();
+    renderCfoUI();
+
     const box = document.getElementById("cfo-chat-box");
-    box.innerHTML += `<div style="margin:6px 0;color:var(--blue)"><strong>You:</strong> ${esc(q)}</div>`;
-    document.getElementById("cfo-input").value = "";
+    const typingEl = document.createElement("div");
+    typingEl.className = "cfo-msg model";
+    typingEl.innerHTML = `<div class="cfo-role">🤖 AI CFO</div><span class="muted">Analyzing live ledger...</span>`;
+    box.appendChild(typingEl);
+    box.scrollTop = box.scrollHeight;
 
     const b = computeBalances();
     const context = {
@@ -262,11 +397,10 @@ Return ONLY raw JSON:
       totalEntries: ledger.entries.length
     };
 
-    const replyEl = document.createElement("div");
-    replyEl.style.margin = "6px 0";
-    replyEl.textContent = "AI CFO analyzing live ledger...";
-    box.appendChild(replyEl);
-    box.scrollTop = box.scrollHeight;
+    const contents = thread.messages.slice(-14).map((m) => ({
+      role: m.role === "user" ? "user" : "model",
+      parts: [{ text: m.text }]
+    }));
 
     for (const model of GEMINI_MODELS) {
       try {
@@ -276,50 +410,35 @@ Return ONLY raw JSON:
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              system_instruction: { parts: [{ text: "You are the CFO for Talani Adventures (Kenya). Answer concisely using the live KES accounting data provided. Highlight cash risks, margins, or eTIMS gaps." }] },
+              system_instruction: {
+                parts: [{
+                  text: `You are the AI CFO for Talani Adventures (Kenya). Use clean Markdown (headings, bold figures, bullet points, and short tables when helpful). Base every number strictly on this LIVE LEDGER SNAPSHOT:\n${JSON.stringify(context)}`
+                }]
+              },
               generationConfig: { thinkingConfig: { thinkingLevel: "minimal" } },
-              contents: [{ role: "user", parts: [{ text: `LIVE DATA: ${JSON.stringify(context)}\n\nQUESTION: ${q}` }] }]
+              contents
             })
           }
         );
         const data = await res.json();
         if (res.ok) {
           const text = (data.candidates?.[0]?.content?.parts || []).filter((p) => !p.thought && p.text).map((p) => p.text).join("");
-          replyEl.innerHTML = `<strong style="color:var(--accent)">AI CFO:</strong> ${esc(text).replace(/\n/g, "<br>")}`;
-          box.scrollTop = box.scrollHeight;
+          thread.messages.push({ role: "model", text });
+          saveCfoStore();
+          renderCfoUI();
           return;
         }
       } catch {}
     }
-    replyEl.textContent = "AI CFO error: Could not reach Gemini.";
-  });
-
-  // ================= SYNC DROPDOWNS & RENDER =================
-  function renderV4() {
-    const entOpts = `<option value="all">All Entities</option>` + ledger.entities.map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join("");
-    const poolOpts = `<option value="all">All Trip Pools</option>` + ledger.pools.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
-    const purePools = ledger.pools.map((p) => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
-
-    const re = document.getElementById("rep-entity");
-    const rp = document.getElementById("rep-pool");
-    const vp = document.getElementById("var-pool-select");
-    if (re && !re.options.length) re.innerHTML = entOpts;
-    if (rp && !rp.options.length) rp.innerHTML = poolOpts;
-    if (vp && !vp.options.length) vp.innerHTML = purePools;
-
-    renderFinancials();
-    renderVarianceAndAging();
+    typingEl.innerHTML = `<div class="cfo-role">🤖 AI CFO</div><span class="warn-text">Could not reach Gemini. Check your connection or API key.</span>`;
   }
 
-  ["rep-entity", "rep-pool"].forEach((id) => document.getElementById(id)?.addEventListener("change", renderFinancials));
-  document.getElementById("var-pool-select")?.addEventListener("change", renderVarianceAndAging);
+  document.getElementById("cfo-send-btn")?.addEventListener("click", sendCfoMessage);
+  document.getElementById("cfo-input")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendCfoMessage();
+  });
+  renderCfoUI();
 
-  const prevRenderAll = window.renderAll;
-  window.renderAll = function () {
-    prevRenderAll();
-    renderV4();
-  };
-  renderV4();
 
   // ================= 6. SHOW UNPAID CLIENT BALANCES =================
   document.getElementById("show-owed-btn")?.addEventListener("click", () => {
