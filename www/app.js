@@ -785,30 +785,6 @@ document.getElementById("export-vault-btn").addEventListener("click", () => {
   window.nativeExportFile(filename, json, document.getElementById("vault-status"));
 });
 
-  // 1. Copy to clipboard as an instant fallback
-  try { await navigator.clipboard.writeText(json); } catch {}
-
-  // 2. Open Android's native Share sheet (works inside Capacitor APK)
-  try {
-    const file = new File([json], filename, { type: "application/json" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ title: "Talani Accounts Vault", files: [file] });
-      status.textContent = "✓ Vault shared & copied to clipboard.";
-      return;
-    }
-  } catch {}
-
-  // 3. Desktop browser download fallback
-  const blob = new Blob([json], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  status.textContent = "✓ Vault copied to clipboard (paste into any .json file to save).";
-});
-
 
 // ================= RENDERERS =================
 function populateDropdowns() {
